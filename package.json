@@ -1,12 +1,21 @@
 {
-  "name": "ark-node-core",
-  "module": "index.ts",
-  "type": "module",
-  "devDependencies": {
-    "@biomejs/biome": "2.4.6",
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  }
+	"name": "ark-node-core",
+	"module": "src/index.ts",
+	"type": "module",
+	"scripts": {
+		"dev": "bun run src/index.ts",
+		"build": "tsc",
+		"lint": "biome check",
+		"format": "biome format"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.4.6",
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"fastify": "^5.8.2"
+	}
 }

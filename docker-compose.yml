@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  ark-node-core:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    container_name: ark-node-core
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    command: bun run src/index.ts
