@@ -10,5 +10,6 @@ services:
       - "3000:3000"
     volumes:
       - .:/workspace
+      - ./storage:/workspace/storage
     working_dir: /workspace
-    command: bun run src/index.ts
+    command: bun run dev
