@@ -5,6 +5,7 @@
  */
 import type { FastifyInstance } from "fastify";
 import { queryAI, queryAIStructured } from "./ai.ts";
+import { type ChronicleEntry, getChronicle } from "./chronicle.ts";
 
 export interface SolomonCommand {
 	module: string | null;
@@ -19,11 +20,12 @@ export interface SolomonResponse {
 	reply: string;
 	executed: boolean;
 	result?: unknown;
+	memories?: ChronicleEntry[];
 }
 
 interface ActionSpec {
 	method: "GET" | "POST" | "PUT" | "DELETE";
-	path: string;
+	path: string | ((params: Record<string, unknown>) => string);
 	body?: (params: Record<string, unknown>) => unknown;
 }
 
@@ -76,6 +78,24 @@ const ACTION_REGISTRY: Record<string, Record<string, ActionSpec>> = {
 		status: { method: "GET", path: "/status" },
 		health: { method: "GET", path: "/health" },
 		apps: { method: "GET", path: "/apps" },
+	},
+	chronicle: {
+		search: {
+			method: "GET",
+			path: (p) =>
+				`/chronicle/search?q=${encodeURIComponent(String(p.q ?? p.query ?? ""))}`,
+		},
+		stats: { method: "GET", path: "/chronicle/stats" },
+		add_note: {
+			method: "POST",
+			path: "/chronicle/entries",
+			body: (p) => ({
+				source_type: "note",
+				title: p.title ?? "Note",
+				content: p.content ?? "",
+			}),
+		},
+		recent: { method: "GET", path: "/chronicle/recent" },
 	},
 };
 
@@ -131,6 +151,12 @@ system:
 - status: Get CPU, memory, uptime
 - apps: List installed modules
 - health: Health check
+
+chronicle:
+- search: Search memories, notes, emails, files (params: q — search query)
+- stats: Get memory statistics
+- add_note: Save a new memory/note (params: title, content)
+- recent: Get recent entries
 `;
 
 const SYSTEM_PROMPT = `You are Solomon, the command router for Ark Node — a personal sovereign server.
@@ -148,6 +174,9 @@ User: "start the VPN" -> {"module":"vpn","action":"start","params":{},"reply":"S
 User: "show me connected devices" -> {"module":"router","action":"devices","params":{},"reply":"Fetching connected devices.","confidence":"high"}
 User: "is adblock running" -> {"module":"adblock","action":"status","params":{},"reply":"Checking ad blocker status.","confidence":"high"}
 User: "what photos do I have" -> {"module":"photos","action":"library","params":{},"reply":"Loading your photo library.","confidence":"high"}
+User: "find my notes about anti-aging" -> {"module":"chronicle","action":"search","params":{"q":"anti-aging"},"reply":"Searching your Chronicle for anti-aging notes.","confidence":"high"}
+User: "search chronicle for beach photos" -> {"module":"chronicle","action":"search","params":{"q":"beach photos"},"reply":"Searching your memories for beach photos.","confidence":"high"}
+User: "remember this: buy more coffee" -> {"module":"chronicle","action":"add_note","params":{"title":"Reminder","content":"buy more coffee"},"reply":"Saving that to your Chronicle.","confidence":"high"}
 User: "hello" -> {"module":null,"action":null,"params":{},"reply":"Hello! Ask me to control your Ark Node.","confidence":"low"}
 
 Rules:
@@ -156,11 +185,87 @@ Rules:
 - If unsure, use "medium" or "low" with null module/action
 - params only needed for actions that take inputs (e.g. start minecraft with version "1.20.4")`;
 
+// ─── Memory Intent Detection ──────────────────────────────────────────────────
+
+// Patterns that indicate the user wants to search/recall memories
+const MEMORY_PATTERNS = [
+	/\b(find|search|look up|lookup|locate)\b/i,
+	/\bshow me\b/i,
+	/\bdo i have\b/i,
+	/\bwhat did i\b/i,
+	/\b(remember|recall|remind me)\b/i,
+	/\bnotes? about\b/i,
+	/\bemails? (about|from|re:)\b/i,
+	/\bphotos? (of|from)\b/i,
+	/\bfiles? (about|called|named)\b/i,
+	/\b(chronicle|my memory|my memories|my notes)\b/i,
+];
+
+export function detectMemoryIntent(message: string): boolean {
+	return MEMORY_PATTERNS.some((p) => p.test(message));
+}
+
+function formatEntriesForContext(entries: ChronicleEntry[]): string {
+	if (entries.length === 0) return "No matching entries found.";
+	return entries
+		.map((e, i) => {
+			const snippet = ((e as { snippet?: string }).snippet ?? e.content).slice(
+				0,
+				200,
+			);
+			const date = e.created_at
+				? new Date(e.created_at).toLocaleDateString("en-US", {
+						month: "short",
+						day: "numeric",
+						year: "numeric",
+					})
+				: "unknown date";
+			return `[${i + 1}] ${e.source_type.toUpperCase()} — "${e.title}" (${date})\n    ${snippet}`;
+		})
+		.join("\n\n");
+}
+
+const MEMORY_SYSTEM_PROMPT = `You are Solomon, the intelligence of Ark Node — a personal sovereign server. The user has asked you to recall or find information from their personal Chronicle (their indexed emails, photos, files, and notes).
+
+Answer conversationally and concisely. Reference specific entries by title when relevant. If no entries were found, say so clearly. Keep your reply under 80 words.`;
+
+// ─── Main interpreter ─────────────────────────────────────────────────────────
+
 export async function interpretCommand(
 	userMessage: string,
 	availableModules: string[],
 	app: FastifyInstance,
 ): Promise<SolomonResponse> {
+	// Memory/search intent — query Chronicle first, then respond with context
+	if (detectMemoryIntent(userMessage)) {
+		const entries = getChronicle().search(userMessage, { limit: 5 });
+		const context = formatEntriesForContext(entries);
+		const prompt = `Chronicle search results for "${userMessage}":\n\n${context}\n\nUser asked: "${userMessage}"`;
+
+		let memReply: string;
+		try {
+			memReply = await queryAI(prompt, MEMORY_SYSTEM_PROMPT);
+		} catch {
+			memReply =
+				entries.length > 0
+					? `Found ${entries.length} matching ${entries.length === 1 ? "entry" : "entries"} in your Chronicle.`
+					: "No matching entries found in your Chronicle.";
+		}
+
+		return {
+			interpretation: {
+				module: "chronicle",
+				action: "search",
+				params: { q: userMessage },
+				raw: userMessage,
+				confidence: "high",
+			},
+			reply: memReply,
+			executed: true,
+			memories: entries,
+		};
+	}
+
 	const context = `Available modules on this system: ${availableModules.join(", ")}`;
 
 	let parsed: SolomonCommand & { reply?: string };
@@ -216,17 +321,21 @@ export async function executeAction(
 		const spec = ACTION_REGISTRY[command.module]?.[command.action];
 		if (spec) {
 			try {
+				const resolvedPath =
+					typeof spec.path === "function"
+						? spec.path(command.params)
+						: spec.path;
 				const injectOpts = spec.body
 					? {
 							method: spec.method,
-							url: spec.path,
+							url: resolvedPath,
 							payload: spec.body(command.params) as Record<string, unknown>,
 							headers: { "content-type": "application/json" } as Record<
 								string,
 								string
 							>,
 						}
-					: { method: spec.method, url: spec.path };
+					: { method: spec.method, url: resolvedPath };
 				const injected = await app.inject(injectOpts);
 				return {
 					interpretation: command,

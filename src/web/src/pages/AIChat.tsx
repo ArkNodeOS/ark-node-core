@@ -1,10 +1,26 @@
 import { useEffect, useRef, useState } from "react";
 import { apiPost } from "../hooks/useApi.ts";
 
+interface ChronicleEntry {
+	id: string;
+	source_type: string;
+	title: string;
+	content: string;
+	snippet?: string;
+	created_at?: number;
+}
+
+interface SolomonResponse {
+	reply?: string;
+	response?: string;
+	memories?: ChronicleEntry[];
+}
+
 interface Message {
 	id: number;
 	role: "user" | "assistant";
 	content: string;
+	memories?: ChronicleEntry[];
 	loading?: boolean;
 }
 
@@ -38,21 +54,18 @@ export default function AIChat() {
 		setLoading(true);
 
 		try {
-			const res = await apiPost<{ reply?: string; response?: string }>(
-				"/solomon",
-				{ message: text },
-			).catch(() =>
-				apiPost<{ response: string }>("/ai/query", { prompt: text }),
-			);
+			const res = await apiPost<SolomonResponse>("/solomon", {
+				message: text,
+			}).catch(() => apiPost<SolomonResponse>("/ai/query", { prompt: text }));
 
 			const content =
-				(res as { reply?: string }).reply ??
-				(res as { response?: string }).response ??
-				"I have no answer at this time.";
+				res.reply ?? res.response ?? "I have no answer at this time.";
+			const memories =
+				res.memories && res.memories.length > 0 ? res.memories : undefined;
 
 			setMessages((prev) => [
 				...prev,
-				{ id: Date.now(), role: "assistant", content },
+				{ id: Date.now(), role: "assistant", content, memories },
 			]);
 		} catch {
 			setMessages((prev) => [
@@ -112,6 +125,44 @@ export default function AIChat() {
 							}`}
 						>
 							<span className="whitespace-pre-wrap">{msg.content}</span>
+							{msg.memories && msg.memories.length > 0 && (
+								<div className="mt-3 pt-3 border-t border-[#3A2A10] space-y-2">
+									<p className="text-[9px] tracking-[0.2em] text-[#C9A84C]/60 uppercase mb-2">
+										Chronicle · {msg.memories.length}{" "}
+										{msg.memories.length === 1 ? "memory" : "memories"}
+									</p>
+									{msg.memories.map((m) => (
+										<div
+											key={m.id}
+											className="rounded-lg bg-[#0C0804] border border-[#3A2A10] p-2.5 hover:border-[#C9A84C]/30 transition-colors"
+										>
+											<div className="flex items-center gap-2 mb-1">
+												<span className="text-[9px] tracking-widest text-[#C9A84C]/70 uppercase font-sans">
+													{m.source_type}
+												</span>
+												{m.created_at && (
+													<span className="text-[9px] text-[#6A5A3A] font-sans">
+														{new Date(m.created_at).toLocaleDateString(
+															"en-US",
+															{
+																month: "short",
+																day: "numeric",
+																year: "numeric",
+															},
+														)}
+													</span>
+												)}
+											</div>
+											<p className="text-xs text-[#DDD0B0] font-medium leading-tight mb-1 line-clamp-1">
+												{m.title}
+											</p>
+											<p className="text-[11px] text-[#9A8A6A] leading-relaxed line-clamp-2">
+												{m.snippet ?? m.content}
+											</p>
+										</div>
+									))}
+								</div>
+							)}
 						</div>
 					</div>
 				))}

@@ -1,6 +1,9 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it, test } from "bun:test";
 import Fastify from "fastify";
-import { executeAction } from "../../src/services/solomon.ts";
+import {
+	detectMemoryIntent,
+	executeAction,
+} from "../../src/services/solomon.ts";
 
 /**
  * Tests for Solomon's execution engine.
@@ -161,5 +164,32 @@ describe("Solomon execution engine", () => {
 		expect(result.executed).toBe(true);
 		expect((result.result as Record<string, unknown>).running).toBe(true);
 		await app.close();
+	});
+});
+
+describe("detectMemoryIntent", () => {
+	test("detects 'find' intent", () => {
+		expect(detectMemoryIntent("find my notes about anti-aging")).toBe(true);
+	});
+	test("detects 'show me' intent", () => {
+		expect(detectMemoryIntent("show me my photos from the beach")).toBe(true);
+	});
+	test("detects 'search' intent", () => {
+		expect(detectMemoryIntent("search for emails about invoices")).toBe(true);
+	});
+	test("detects 'remember' intent", () => {
+		expect(detectMemoryIntent("remember this: buy coffee")).toBe(true);
+	});
+	test("detects 'chronicle' intent", () => {
+		expect(detectMemoryIntent("what's in my chronicle")).toBe(true);
+	});
+	test("does NOT flag command intent", () => {
+		expect(detectMemoryIntent("start the minecraft server")).toBe(false);
+	});
+	test("does NOT flag general question", () => {
+		expect(detectMemoryIntent("what is the capital of France")).toBe(false);
+	});
+	test("does NOT flag status check", () => {
+		expect(detectMemoryIntent("check adblock status")).toBe(false);
 	});
 });
