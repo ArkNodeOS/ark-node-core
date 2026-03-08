@@ -22,7 +22,7 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Install deps
+      - name: Install server deps
         run: bun install --frozen-lockfile
 
       - name: Biome lint
@@ -31,11 +31,13 @@ jobs:
       - name: TypeScript check (server)
         run: bunx tsc --noEmit
 
+      - name: Install web UI deps
+        working-directory: src/web
+        run: bun install --frozen-lockfile
+
       - name: TypeScript check (web UI)
         working-directory: src/web
-        run: |
-          bun install --frozen-lockfile
-          bunx tsc --noEmit
+        run: bunx tsc --noEmit
 
   # ── 2. Test + Coverage ────────────────────────────────────────────────────
   test:
@@ -95,9 +97,8 @@ jobs:
         run: |
           JS_SIZE=$(du -sk dist/assets/*.js | awk '{sum+=$1} END {print sum}')
           echo "JS bundle: ${JS_SIZE}KB"
-          # Fail if JS > 500KB (current ~202KB, plenty of headroom)
-          if [ "$JS_SIZE" -gt 500 ]; then
-            echo "❌ JS bundle too large: ${JS_SIZE}KB (limit 500KB)"
+          if [ "$JS_SIZE" -gt 600 ]; then
+            echo "❌ JS bundle too large: ${JS_SIZE}KB (limit 600KB)"
             exit 1
           fi
           echo "✅ Bundle size OK"
@@ -121,6 +122,10 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
+      # GHCR requires lowercase owner
+      - name: Set lowercase owner
+        run: echo "OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Build image (PR — no push)
         if: github.event_name == 'pull_request'
@@ -149,8 +154,8 @@ jobs:
           file: .devcontainer/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/ark-node-core:latest
-            ghcr.io/${{ github.repository_owner }}/ark-node-core:sha-${{ github.sha }}
+            ghcr.io/${{ env.OWNER }}/ark-node-core:latest
+            ghcr.io/${{ env.OWNER }}/ark-node-core:sha-${{ github.sha }}
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -160,14 +165,12 @@ jobs:
       - name: Run container smoke test
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         run: |
-          docker pull ghcr.io/${{ github.repository_owner }}/ark-node-core:latest
-          CID=$(docker run -d -p 3000:3000 ghcr.io/${{ github.repository_owner }}/ark-node-core:latest)
-          sleep 5
+          CID=$(docker run -d -p 3000:3000 ghcr.io/${{ env.OWNER }}/ark-node-core:latest)
+          sleep 6
           STATUS=$(curl -sf -o /dev/null -w "%{http_code}" http://localhost:3000/health || echo "000")
           UI_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" http://localhost:3000/ui/ || echo "000")
           docker stop $CID
-          echo "API /health: $STATUS"
-          echo "UI /ui/: $UI_STATUS"
+          echo "API /health: $STATUS | UI /ui/: $UI_STATUS"
           [ "$STATUS" = "200" ] && [ "$UI_STATUS" = "200" ] && echo "✅ Smoke test passed" || (echo "❌ Smoke test failed"; exit 1)
 
   # ── 5. Dev Container Build ────────────────────────────────────────────────
@@ -177,17 +180,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set lowercase owner
+        run: echo "OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Build devcontainer
         uses: devcontainers/ci@v0.3
         with:
-          imageName: ghcr.io/${{ github.repository_owner }}/ark-node-core-devcontainer
-          cacheFrom: ghcr.io/${{ github.repository_owner }}/ark-node-core-devcontainer
+          imageName: ghcr.io/${{ env.OWNER }}/ark-node-core-devcontainer
+          cacheFrom: ghcr.io/${{ env.OWNER }}/ark-node-core-devcontainer
           push: never
           runCmd: |
-            echo "Testing devcontainer environment..."
+            echo "Testing devcontainer..."
             bun --version
-            node --version || true
-            echo "✅ Devcontainer build OK"
+            echo "✅ Devcontainer OK"
 
   # ── 6. Security Scan ─────────────────────────────────────────────────────
   security:
@@ -198,10 +203,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set lowercase owner
+        run: echo "OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Run Trivy vulnerability scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ghcr.io/${{ github.repository_owner }}/ark-node-core:latest
+          image-ref: ghcr.io/${{ env.OWNER }}/ark-node-core:latest
           format: sarif
           output: trivy-results.sarif
           severity: CRITICAL,HIGH

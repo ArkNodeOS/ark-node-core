@@ -2,12 +2,13 @@
 
 # ✝ Ark Node Core
 
-[![CI](https://github.com/ArkNodeOS/ark-node-core/actions/workflows/ci.yml/badge.svg)](https://github.com/ArkNodeOS/ark-node-core/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/ArkNodeOS/ark-node-core/branch/master/graph/badge.svg)](https://codecov.io/gh/ArkNodeOS/ark-node-core)
-[![Docker](https://ghcr-badge.egpl.dev/arknoedeos/ark-node-core/size)](https://github.com/ArkNodeOS/ark-node-core/pkgs/container/ark-node-core)
+[![CI](https://github.com/ArkNodeOS/ark-node-core/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/ArkNodeOS/ark-node-core/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/ArkNodeOS/ark-node-core/actions/workflows/codeql.yml/badge.svg)](https://github.com/ArkNodeOS/ark-node-core/actions/workflows/codeql.yml)
+[![codecov](https://codecov.io/gh/ArkNodeOS/ark-node-core/branch/master/graph/badge.svg?token=YOUR_TOKEN)](https://codecov.io/gh/ArkNodeOS/ark-node-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Bun](https://img.shields.io/badge/Bun-1.x-black?logo=bun)](https://bun.sh)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](https://www.typescriptlang.org)
+[![Bun](https://img.shields.io/badge/Bun-1.3.x-black?logo=bun)](https://bun.sh)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript)](https://www.typescriptlang.org)
+[![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=black)](https://react.dev)
 
 **Personal sovereign server platform.** Local AI, modular apps, unified inbox, ad blocking, game servers — all running privately in your home.
 

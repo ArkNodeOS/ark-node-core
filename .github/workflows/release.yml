@@ -49,9 +49,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract version from tag
+      - name: Set lowercase owner + version
         id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        run: |
+          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          echo "OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Build & push multi-arch image
         uses: docker/build-push-action@v5
@@ -61,8 +63,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/ark-node-core:latest
-            ghcr.io/${{ github.repository_owner }}/ark-node-core:${{ steps.version.outputs.VERSION }}
+            ghcr.io/${{ env.OWNER }}/ark-node-core:latest
+            ghcr.io/${{ env.OWNER }}/ark-node-core:${{ steps.version.outputs.VERSION }}
           labels: |
             org.opencontainers.image.title=Ark Node Core
             org.opencontainers.image.description=Personal sovereign server platform

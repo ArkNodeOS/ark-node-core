@@ -306,9 +306,17 @@ export default class RouterModule {
 			.filter(Boolean)
 			.map((line) => {
 				const parts = line.split(/\s+/);
-				return { ip: parts[0], mac: parts[2], interface: parts[4] };
+				return { ip: parts[0] ?? "", mac: parts[2], interface: parts[4] };
 			})
-			.filter((d) => d.ip && d.mac !== "(incomplete)");
+			.filter(
+				(
+					d,
+				): d is {
+					ip: string;
+					mac: string | undefined;
+					interface: string | undefined;
+				} => Boolean(d.ip) && d.mac !== "(incomplete)",
+			);
 
 		let scanResults: { ip: string; hostname?: string; mac?: string }[] =
 			arpTable;
