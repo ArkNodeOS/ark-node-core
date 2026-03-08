@@ -105,7 +105,11 @@ export function registerRoutes(app: FastifyInstance) {
 		}
 		const modules = getLoadedModules().map((m) => m.name);
 		try {
-			const response = await interpretCommand(result.data.message, modules);
+			const response = await interpretCommand(
+				result.data.message,
+				modules,
+				app,
+			);
 			return response;
 		} catch (err) {
 			reply.code(503);
