@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import type { Page } from "../App.tsx";
 
 interface LayoutProps {
@@ -7,121 +7,158 @@ interface LayoutProps {
 	children: ReactNode;
 }
 
-const navItems: { id: Page; label: string; icon: string; latin: string }[] = [
-	{ id: "dashboard", label: "Sanctum", icon: "✦", latin: "Domus" },
-	{ id: "ai", label: "Solomon", icon: "✝", latin: "Sapientia" },
-	{ id: "apps", label: "Relics", icon: "❧", latin: "Moduli" },
-	{ id: "files", label: "Vault", icon: "◈", latin: "Archivum" },
-	{ id: "minecraft", label: "Minecraft", icon: "⛏", latin: "Ludus" },
-	{ id: "vpn", label: "VPN", icon: "🔒", latin: "Tutela" },
-	{ id: "backup", label: "Backup", icon: "💾", latin: "Custodia" },
-	{ id: "router", label: "Router", icon: "🌐", latin: "Retis" },
-	{ id: "email", label: "Epistulae", icon: "✉", latin: "Nuntius" },
+interface NavItem {
+	id: Page;
+	label: string;
+	icon: string;
+	latinLabel: string;
+}
+
+// Primary nav for mobile bottom bar (5 items)
+const MOBILE_NAV: NavItem[] = [
+	{ id: "dashboard", label: "Home", icon: "⚓", latinLabel: "Sanctum" },
+	{ id: "ai", label: "Solomon", icon: "👁️", latinLabel: "Sapientia" },
+	{ id: "apps", label: "Apps", icon: "✦", latinLabel: "Relics" },
+	{ id: "files", label: "Files", icon: "◈", latinLabel: "Vault" },
+	{ id: "settings", label: "Settings", icon: "⚙️", latinLabel: "Regula" },
 ];
 
+// Full nav for desktop sidebar
+const ALL_NAV: NavItem[] = [
+	{ id: "dashboard", label: "Sanctum", icon: "⚓", latinLabel: "Domus" },
+	{ id: "ai", label: "Solomon", icon: "👁️", latinLabel: "Sapientia" },
+	{ id: "apps", label: "Relics", icon: "✦", latinLabel: "Moduli" },
+	{ id: "files", label: "Vault", icon: "◈", latinLabel: "Archivum" },
+	{ id: "minecraft", label: "Minecraft", icon: "⛏", latinLabel: "Ludus" },
+	{ id: "vpn", label: "VPN", icon: "🔒", latinLabel: "Tutela" },
+	{ id: "backup", label: "Backup", icon: "💾", latinLabel: "Custodia" },
+	{ id: "router", label: "Router", icon: "🌐", latinLabel: "Retis" },
+	{ id: "email", label: "Epistulae", icon: "✉", latinLabel: "Nuntius" },
+	{ id: "settings", label: "Settings", icon: "⚙️", latinLabel: "Regula" },
+];
+
+function useBreakpoint() {
+	const [width, setWidth] = useState(
+		typeof window !== "undefined" ? window.innerWidth : 1024,
+	);
+	useEffect(() => {
+		const handler = () => setWidth(window.innerWidth);
+		window.addEventListener("resize", handler);
+		return () => window.removeEventListener("resize", handler);
+	}, []);
+	return { isMobile: width < 768, isTablet: width >= 768 && width < 1024 };
+}
+
 export default function Layout({ page, onNavigate, children }: LayoutProps) {
-	return (
-		<div className="flex h-screen bg-ark-bg text-ark-ivory overflow-hidden">
-			{/* ── Sidebar (desktop) ── */}
-			<aside className="hidden md:flex flex-col w-64 bg-ark-surface border-r border-ark-border shrink-0 relative overflow-hidden">
-				{/* Subtle cross watermark */}
-				<div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-					<span className="text-[280px] text-ark-gold/[0.02] font-serif leading-none">
-						✝
+	const { isMobile, isTablet } = useBreakpoint();
+
+	// ── Mobile layout ──
+	if (isMobile) {
+		return (
+			<div className="flex flex-col min-h-screen bg-[#060402] text-[#F5F0E0]">
+				<header
+					className="flex items-center justify-between px-4 pb-3 bg-[#0C0804] border-b border-[#3A2A10]"
+					style={{ paddingTop: "max(12px, env(safe-area-inset-top))" }}
+				>
+					<span className="font-serif text-xl text-[#C9A84C] tracking-widest">
+						ARK NODE
 					</span>
-				</div>
+					<span className="text-xl">⚓</span>
+				</header>
 
-				{/* Logo */}
-				<div className="relative p-6 border-b border-ark-border">
-					<div className="flex items-center gap-3">
-						<div className="w-10 h-10 rounded-ark bg-ark-card border border-ark-border flex items-center justify-center shadow-gold-subtle">
-							<span className="text-ark-gold text-lg font-serif">✝</span>
-						</div>
-						<div>
-							<div className="font-serif text-xl text-ark-ivory tracking-wide">
-								Ark Node
-							</div>
-							<div className="text-[10px] text-ark-gold/60 tracking-[0.2em] uppercase font-sans">
-								Arca Foederis
-							</div>
-						</div>
+				<main className="flex-1 overflow-y-auto pb-24">{children}</main>
+
+				<nav
+					className="fixed bottom-0 left-0 right-0 bg-[#0C0804]/95 backdrop-blur-sm border-t border-[#3A2A10] z-50"
+					style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+				>
+					<div className="flex">
+						{MOBILE_NAV.map((item) => (
+							<button
+								key={item.id}
+								type="button"
+								onClick={() => onNavigate(item.id)}
+								className={`flex-1 flex flex-col items-center py-2 gap-0.5 transition-colors min-h-[52px] justify-center ${
+									page === item.id ? "text-[#C9A84C]" : "text-[#6A5A3A]"
+								}`}
+							>
+								<span className="text-xl leading-none">{item.icon}</span>
+								<span className="text-[10px] tracking-wider uppercase">
+									{item.label}
+								</span>
+							</button>
+						))}
 					</div>
-				</div>
+				</nav>
+			</div>
+		);
+	}
 
-				{/* Nav */}
-				<nav className="relative flex-1 p-4 space-y-1 overflow-y-auto">
-					{navItems.map((item) => (
+	// ── Tablet layout (icon-only sidebar) ──
+	if (isTablet) {
+		return (
+			<div className="flex min-h-screen bg-[#060402] text-[#F5F0E0]">
+				<aside className="w-16 flex flex-col items-center py-6 gap-2 bg-[#0C0804] border-r border-[#3A2A10] sticky top-0 h-screen overflow-y-auto">
+					<span className="text-[#C9A84C] text-2xl mb-4">⚓</span>
+					{ALL_NAV.map((item) => (
 						<button
 							key={item.id}
+							type="button"
 							onClick={() => onNavigate(item.id)}
-							className={`w-full flex items-center gap-3 px-4 py-3 rounded-ark text-left transition-all duration-200 group ${
+							title={item.latinLabel}
+							className={`w-10 h-10 flex items-center justify-center rounded-lg text-xl transition-colors ${
 								page === item.id
-									? "bg-ark-gold/10 border border-ark-gold/30 text-ark-gold"
-									: "border border-transparent text-ark-muted hover:text-ark-parchment hover:bg-ark-raised hover:border-ark-border"
+									? "bg-[#C9A84C]/15 text-[#C9A84C]"
+									: "text-[#6A5A3A] hover:text-[#9A8A6A] hover:bg-[#221608]"
 							}`}
 						>
-							<span
-								className={`text-base transition-colors ${page === item.id ? "text-ark-gold" : "text-ark-dim group-hover:text-ark-gold/60"}`}
-							>
-								{item.icon}
-							</span>
-							<div className="flex-1 min-w-0">
-								<div
-									className={`font-serif text-base leading-tight ${page === item.id ? "" : ""}`}
-								>
-									{item.label}
-								</div>
-								<div className="text-[10px] tracking-widest uppercase font-sans text-ark-dim/70">
-									{item.latin}
-								</div>
-							</div>
-							{page === item.id && (
-								<span className="w-1 h-4 rounded-full bg-ark-gold/60 shrink-0" />
-							)}
+							{item.icon}
 						</button>
 					))}
-				</nav>
+				</aside>
+				<main className="flex-1 overflow-y-auto">{children}</main>
+			</div>
+		);
+	}
 
-				{/* Footer */}
-				<div className="relative p-5 border-t border-ark-border">
-					<div className="divider-gold mb-3" />
-					<p className="text-[10px] text-ark-dim text-center tracking-[0.15em] uppercase font-sans">
-						Your data. Your sovereignty.
+	// ── Desktop layout ──
+	return (
+		<div className="flex h-screen bg-[#060402] text-[#F5F0E0] overflow-hidden">
+			<aside className="w-56 flex flex-col py-6 px-3 bg-[#0C0804] border-r border-[#3A2A10] sticky top-0 h-screen gap-1 overflow-y-auto shrink-0">
+				<div className="px-3 mb-6">
+					<h1 className="font-serif text-xl text-[#C9A84C] tracking-widest">
+						ARK NODE
+					</h1>
+					<p className="text-[10px] text-[#6A5A3A] tracking-widest uppercase mt-0.5">
+						Sovereign Server
 					</p>
 				</div>
-			</aside>
-
-			{/* ── Main content ── */}
-			<main className="flex-1 flex flex-col overflow-hidden">
-				<div className="flex-1 overflow-y-auto pb-20 md:pb-0">{children}</div>
-			</main>
-
-			{/* ── Bottom tab bar (mobile) ── */}
-			<nav
-				className="md:hidden fixed bottom-0 left-0 right-0 z-50"
-				style={{
-					background: "rgba(10,7,3,0.96)",
-					backdropFilter: "blur(20px)",
-					borderTop: "1px solid #3A2A10",
-				}}
-			>
-				<div className="flex overflow-x-auto justify-start items-center h-16 px-2 gap-1">
-					{navItems.map((item) => (
-						<button
-							key={item.id}
-							onClick={() => onNavigate(item.id)}
-							className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-ark transition-all min-w-[56px] shrink-0 ${
-								page === item.id ? "text-ark-gold" : "text-ark-dim"
-							}`}
-						>
-							<span className="text-xl leading-none">{item.icon}</span>
-							<span className="text-[9px] font-serif tracking-wide">
+				{ALL_NAV.map((item) => (
+					<button
+						key={item.id}
+						type="button"
+						onClick={() => onNavigate(item.id)}
+						className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left w-full ${
+							page === item.id
+								? "bg-[#C9A84C]/10 text-[#C9A84C] border border-[#C9A84C]/20"
+								: "text-[#9A8A6A] hover:text-[#F5F0E0] hover:bg-[#221608] border border-transparent"
+						}`}
+					>
+						<span className="text-base w-5 text-center shrink-0">
+							{item.icon}
+						</span>
+						<div className="flex-1 min-w-0">
+							<div className="text-xs tracking-widest uppercase font-sans">
 								{item.label}
-							</span>
-						</button>
-					))}
-				</div>
-			</nav>
+							</div>
+							<div className="text-[10px] text-[#6A5A3A] tracking-widest uppercase font-sans mt-0.5">
+								{item.latinLabel}
+							</div>
+						</div>
+					</button>
+				))}
+			</aside>
+			<main className="flex-1 overflow-y-auto">{children}</main>
 		</div>
 	);
 }

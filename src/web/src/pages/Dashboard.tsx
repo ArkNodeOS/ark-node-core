@@ -72,21 +72,21 @@ export default function Dashboard({
 	const { data: welcome } = useApi<WelcomeData>("/");
 
 	return (
-		<div className="relative min-h-full p-6 md:p-12 max-w-5xl mx-auto">
+		<div className="relative min-h-full px-4 py-4 md:px-8 md:py-10 max-w-5xl mx-auto">
 			{/* Cross watermark */}
 			<div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
-				<span className="text-[600px] font-serif text-ark-gold/[0.015] leading-none">
+				<span className="text-[400px] md:text-[600px] font-serif text-ark-gold/[0.015] leading-none">
 					✝
 				</span>
 			</div>
 
 			<div className="relative animate-slide-up">
 				{/* Header */}
-				<div className="mb-12">
+				<div className="mb-8 md:mb-12">
 					<p className="text-ark-gold/60 text-sm font-sans tracking-[0.3em] uppercase mb-2">
 						{greeting()}
 					</p>
-					<h1 className="font-serif text-5xl md:text-6xl text-ark-ivory font-light tracking-wide mb-3">
+					<h1 className="font-serif text-4xl md:text-6xl text-ark-ivory font-light tracking-wide mb-3">
 						Your <span className="text-gold-gradient">Ark</span>
 					</h1>
 					<div className="divider-gold w-32 mb-3" />
@@ -96,7 +96,7 @@ export default function Dashboard({
 				</div>
 
 				{/* Status row */}
-				<div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-12">
+				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-8 md:mb-12">
 					<StatusCard
 						icon="◎"
 						label="Heap Memory"
@@ -117,7 +117,7 @@ export default function Dashboard({
 				</div>
 
 				{/* Ornamental divider */}
-				<div className="flex items-center gap-4 mb-8">
+				<div className="flex items-center gap-4 mb-6 md:mb-8">
 					<div className="divider-gold flex-1" />
 					<span className="text-ark-gold/40 text-sm font-serif italic">
 						Ministeria
@@ -126,12 +126,13 @@ export default function Dashboard({
 				</div>
 
 				{/* Quick actions */}
-				<div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
 					{ACTIONS.map((action) => (
 						<button
 							key={action.id}
+							type="button"
 							onClick={() => onNavigate(action.id)}
-							className="ark-card p-7 text-left group hover:border-ark-gold/40 hover:shadow-gold-glow transition-all duration-300 relative overflow-hidden"
+							className="ark-card p-5 md:p-7 text-left group hover:border-ark-gold/40 hover:shadow-gold-glow transition-all duration-300 relative overflow-hidden"
 						>
 							<div className="absolute inset-0 bg-gold-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 							<div className="relative">
@@ -153,7 +154,7 @@ export default function Dashboard({
 				</div>
 
 				{/* Version badge */}
-				<div className="mt-12 text-center">
+				<div className="mt-8 md:mt-12 text-center">
 					<span className="text-xs text-ark-dim/50 font-sans tracking-widest uppercase">
 						v{welcome?.version ?? "0.3.0"} · Codename Solomon
 					</span>

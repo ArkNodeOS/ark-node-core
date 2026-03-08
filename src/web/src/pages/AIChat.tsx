@@ -8,178 +8,151 @@ interface Message {
 	loading?: boolean;
 }
 
-const GREETINGS = [
-	"Speak, and I shall listen.",
-	"Ask of me what you will.",
-	"How may I serve you today?",
-	"Your words are received.",
-];
-
 export default function AIChat() {
 	const [messages, setMessages] = useState<Message[]>([
 		{
 			id: 0,
 			role: "assistant",
-			content: `Pax vobiscum. I am Solomon — your private AI, running wholly within your Ark. ${GREETINGS[Math.floor(Math.random() * GREETINGS.length)]}`,
+			content:
+				"Salve. I am Solomon, the intelligence of your Ark Node. How may I serve you?",
 		},
 	]);
 	const [input, setInput] = useState("");
-	const [busy, setBusy] = useState(false);
+	const [loading, setLoading] = useState(false);
 	const bottomRef = useRef<HTMLDivElement>(null);
-	const inputRef = useRef<HTMLTextAreaElement>(null);
+	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: intentional scroll trigger on messages and loading
 	useEffect(() => {
 		bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-	}, []);
+	}, [messages, loading]);
 
-	async function send() {
-		const prompt = input.trim();
-		if (!prompt || busy) return;
+	const send = async () => {
+		const text = input.trim();
+		if (!text || loading) return;
 		setInput("");
-		setBusy(true);
+		if (textareaRef.current) textareaRef.current.style.height = "auto";
 
-		const userMsg: Message = { id: Date.now(), role: "user", content: prompt };
-		const loadingMsg: Message = {
-			id: Date.now() + 1,
-			role: "assistant",
-			content: "",
-			loading: true,
-		};
-		setMessages((prev) => [...prev, userMsg, loadingMsg]);
+		const userMsg: Message = { id: Date.now(), role: "user", content: text };
+		setMessages((prev) => [...prev, userMsg]);
+		setLoading(true);
 
 		try {
-			// Try Solomon first (natural language routing), fall back to direct AI query
 			const res = await apiPost<{ reply?: string; response?: string }>(
 				"/solomon",
-				{ message: prompt },
-			).catch(() => apiPost<{ response: string }>("/ai/query", { prompt }));
+				{ message: text },
+			).catch(() =>
+				apiPost<{ response: string }>("/ai/query", { prompt: text }),
+			);
 
 			const content =
-				(res as any).reply ??
-				(res as any).response ??
+				(res as { reply?: string }).reply ??
+				(res as { response?: string }).response ??
 				"I have no answer at this time.";
-			setMessages((prev) =>
-				prev.map((m) => (m.loading ? { ...m, content, loading: false } : m)),
-			);
-		} catch (e) {
-			setMessages((prev) =>
-				prev.map((m) =>
-					m.loading
-						? { ...m, content: `Error: ${String(e)}`, loading: false }
-						: m,
-				),
-			);
-		} finally {
-			setBusy(false);
-			inputRef.current?.focus();
-		}
-	}
 
-	function onKeyDown(e: React.KeyboardEvent) {
+			setMessages((prev) => [
+				...prev,
+				{ id: Date.now(), role: "assistant", content },
+			]);
+		} catch {
+			setMessages((prev) => [
+				...prev,
+				{
+					id: Date.now(),
+					role: "assistant",
+					content: "Connection lost. Is the server running?",
+				},
+			]);
+		} finally {
+			setLoading(false);
+			textareaRef.current?.focus();
+		}
+	};
+
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
 		if (e.key === "Enter" && !e.shiftKey) {
 			e.preventDefault();
 			send();
 		}
-	}
+	};
+
+	const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+		setInput(e.target.value);
+		e.target.style.height = "auto";
+		e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+	};
 
 	return (
-		<div className="flex flex-col h-full">
+		<div
+			className="flex flex-col"
+			style={{ height: "calc(100vh - env(safe-area-inset-top, 0px))" }}
+		>
 			{/* Header */}
-			<div
-				className="px-6 md:px-10 py-5 border-b border-ark-border"
-				style={{
-					background: "rgba(19,13,6,0.8)",
-					backdropFilter: "blur(12px)",
-				}}
-			>
-				<div className="flex items-center gap-4 max-w-3xl">
-					<div className="w-10 h-10 rounded-full bg-ark-card border border-ark-gold/30 flex items-center justify-center shadow-gold-subtle">
-						<span className="text-ark-gold font-serif">✝</span>
-					</div>
-					<div>
-						<h2 className="font-serif text-xl text-ark-ivory tracking-wide">
-							Solomon
-						</h2>
-						<p className="text-[10px] text-ark-gold/50 tracking-[0.2em] uppercase font-sans">
-							Sapientia · Private AI
-						</p>
-					</div>
-				</div>
+			<div className="px-4 py-3 border-b border-[#3A2A10] bg-[#0C0804] shrink-0">
+				<h2 className="font-serif text-lg text-[#C9A84C] tracking-widest">
+					SAPIENTIA
+				</h2>
+				<p className="text-xs text-[#6A5A3A] tracking-wider">
+					Solomon · Intelligence Layer
+				</p>
 			</div>
 
 			{/* Messages */}
-			<div className="flex-1 overflow-y-auto px-4 md:px-10 py-8 space-y-6">
+			<div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 min-h-0">
 				{messages.map((msg) => (
 					<div
 						key={msg.id}
-						className={`flex gap-4 animate-slide-up ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+						className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
 					>
-						{msg.role === "assistant" && (
-							<div className="w-8 h-8 rounded-full bg-ark-card border border-ark-gold/20 flex items-center justify-center text-ark-gold/70 text-sm shrink-0 mt-1">
-								✝
-							</div>
-						)}
 						<div
-							className={`max-w-[78%] px-5 py-4 text-sm leading-relaxed font-sans ${
+							className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
 								msg.role === "user"
-									? "bg-ark-gold/10 border border-ark-gold/30 text-ark-ivory rounded-ark-lg rounded-br-sm"
-									: "ark-card text-ark-parchment rounded-ark-lg rounded-bl-sm"
+									? "bg-[#C9A84C]/15 text-[#F5F0E0] border border-[#C9A84C]/30 rounded-br-sm"
+									: "bg-[#1A1108] text-[#DDD0B0] border border-[#3A2A10] rounded-bl-sm"
 							}`}
 						>
-							{msg.loading ? (
-								<span className="flex gap-1.5 items-center h-4">
-									{[0, 200, 400].map((d) => (
-										<span
-											key={d}
-											className="w-1.5 h-1.5 rounded-full bg-ark-gold/50 animate-pulse-gold"
-											style={{ animationDelay: `${d}ms` }}
-										/>
-									))}
-								</span>
-							) : (
-								<span className="whitespace-pre-wrap">{msg.content}</span>
-							)}
+							<span className="whitespace-pre-wrap">{msg.content}</span>
 						</div>
-						{msg.role === "user" && (
-							<div className="w-8 h-8 rounded-full bg-ark-raised border border-ark-border flex items-center justify-center text-ark-muted text-xs shrink-0 mt-1">
-								✦
-							</div>
-						)}
 					</div>
 				))}
+				{loading && (
+					<div className="flex justify-start">
+						<div className="bg-[#1A1108] border border-[#3A2A10] rounded-2xl rounded-bl-sm px-4 py-3">
+							<div className="flex gap-1 items-center h-4">
+								<span className="w-1.5 h-1.5 rounded-full bg-[#C9A84C] animate-bounce [animation-delay:0ms]" />
+								<span className="w-1.5 h-1.5 rounded-full bg-[#C9A84C] animate-bounce [animation-delay:150ms]" />
+								<span className="w-1.5 h-1.5 rounded-full bg-[#C9A84C] animate-bounce [animation-delay:300ms]" />
+							</div>
+						</div>
+					</div>
+				)}
 				<div ref={bottomRef} />
 			</div>
 
 			{/* Input */}
-			<div
-				className="px-4 md:px-10 py-5 border-t border-ark-border"
-				style={{ background: "rgba(13,8,4,0.9)", backdropFilter: "blur(16px)" }}
-			>
-				<div className="flex gap-3 items-end max-w-3xl mx-auto">
+			<div className="border-t border-[#3A2A10] bg-[#0C0804] px-4 py-3 shrink-0">
+				<div className="flex gap-2 items-end">
 					<textarea
-						ref={inputRef}
+						ref={textareaRef}
 						value={input}
-						onChange={(e) => setInput(e.target.value)}
-						onKeyDown={onKeyDown}
-						placeholder="Speak to Solomon…"
+						onChange={handleInput}
+						onKeyDown={handleKeyDown}
+						placeholder="Ask Solomon anything..."
 						rows={1}
-						className="flex-1 bg-ark-card border border-ark-border rounded-ark px-4 py-3 text-sm
-                       text-ark-ivory placeholder:text-ark-dim font-sans resize-none
-                       focus:outline-none focus:border-ark-gold/50 transition-colors"
-						style={{ minHeight: "48px", maxHeight: "120px" }}
+						className="flex-1 bg-[#1A1108] border border-[#3A2A10] rounded-xl px-4 py-3 text-sm text-[#F5F0E0] placeholder-[#6A5A3A] resize-none focus:outline-none focus:border-[#C9A84C]/50 transition-colors"
+						style={{ minHeight: "44px", maxHeight: "120px" }}
 					/>
 					<button
+						type="button"
 						onClick={send}
-						disabled={busy || !input.trim()}
-						className="w-12 h-12 rounded-ark border border-ark-gold/40 bg-ark-gold/10 hover:bg-ark-gold/20
-                       hover:border-ark-gold/70 disabled:opacity-30 disabled:cursor-not-allowed
-                       flex items-center justify-center text-ark-gold transition-all shrink-0"
+						disabled={!input.trim() || loading}
+						className="w-11 h-11 rounded-xl bg-[#C9A84C] text-[#060402] flex items-center justify-center text-lg disabled:opacity-30 disabled:cursor-not-allowed transition-opacity shrink-0"
 					>
-						<span className="text-base">↑</span>
+						↑
 					</button>
 				</div>
-				<p className="text-[10px] text-ark-dim/40 text-center mt-2 tracking-widest uppercase font-sans">
-					Enter to send · Shift+Enter for newline · Runs locally on your Ark
+				<p className="text-[10px] text-[#3A2A10] text-center mt-2 tracking-wider">
+					SHIFT+ENTER FOR NEW LINE
 				</p>
 			</div>
 		</div>

@@ -8,6 +8,7 @@ import EmailInbox from "./pages/EmailInbox.tsx";
 import Files from "./pages/Files.tsx";
 import Minecraft from "./pages/Minecraft.tsx";
 import RouterDashboard from "./pages/RouterDashboard.tsx";
+import Settings from "./pages/Settings.tsx";
 import VPNManager from "./pages/VPNManager.tsx";
 
 export type Page =
@@ -19,7 +20,8 @@ export type Page =
 	| "vpn"
 	| "backup"
 	| "router"
-	| "email";
+	| "email"
+	| "settings";
 
 export default function App() {
 	const [page, setPage] = useState<Page>("dashboard");
@@ -44,6 +46,8 @@ export default function App() {
 				return <RouterDashboard />;
 			case "email":
 				return <EmailInbox />;
+			case "settings":
+				return <Settings />;
 		}
 	};
 
