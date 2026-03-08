@@ -1,10 +1,17 @@
 /**
  * Chronicle Module — personal memory engine.
- * Routes: /chronicle/*
+ * Routes (auto-prefixed with /chronicle by the loader):
+ *   GET  /chronicle/search
+ *   GET  /chronicle/stats
+ *   GET  /chronicle/recent
+ *   GET  /chronicle/entry/:id
+ *   POST /chronicle/entries
+ *   DELETE /chronicle/entries/:id
+ *   POST /chronicle/ingest/email
+ *   POST /chronicle/ingest/photos
  */
 
 import crypto from "node:crypto";
-import type { FastifyInstance } from "fastify";
 import { z } from "zod/v4";
 import { Module, OnInit, Route } from "../../decorators/index.ts";
 import {
@@ -13,7 +20,7 @@ import {
 	type SourceType,
 } from "../../services/chronicle.ts";
 
-// ─── Seed data helpers ────────────────────────────────────────────────────────
+// ─── Seed data ────────────────────────────────────────────────────────────────
 
 function seedDemoData(): void {
 	const c = getChronicle();
@@ -69,10 +76,7 @@ function seedDemoData(): void {
 			title: "Ark Node hardware prototype",
 			content:
 				"Photo of the first Ark Node hardware prototype. Mac Mini-sized enclosure with gold accent ring.",
-			metadata: {
-				filename: "IMG_5103.jpg",
-				album: "Projects",
-			},
+			metadata: { filename: "IMG_5103.jpg", album: "Projects" },
 			created_at: now - 10 * day,
 		},
 		{
@@ -140,15 +144,18 @@ const SearchQuery = z.object({
 		"Personal memory engine — search across emails, photos, files, and notes",
 	permissions: ["storage", "ai"],
 })
-export class ChronicleModule {
+export default class ChronicleModule {
 	@OnInit()
 	init(): void {
 		seedDemoData();
 		console.log("[chronicle] Chronicle memory engine initialised");
 	}
 
-	@Route("GET", "/chronicle/search")
-	async search(req: { query: Record<string, string> }) {
+	// Routes are auto-prefixed with /chronicle by the loader
+	// e.g. @Route("GET", "/search") → GET /chronicle/search
+
+	@Route("GET", "/search")
+	search(req: { query: Record<string, string> }) {
 		const parsed = SearchQuery.safeParse(req.query);
 		if (!parsed.success) {
 			return { error: "Invalid query parameters", issues: parsed.error.issues };
@@ -161,27 +168,27 @@ export class ChronicleModule {
 		return { query: q ?? "", results, count: results.length };
 	}
 
-	@Route("GET", "/chronicle/stats")
-	async stats() {
+	@Route("GET", "/stats")
+	stats() {
 		return getChronicle().stats();
 	}
 
-	@Route("GET", "/chronicle/recent")
-	async recent(req: { query: Record<string, string> }) {
+	@Route("GET", "/recent")
+	recent(req: { query: Record<string, string> }) {
 		const limit = Math.min(Number(req.query.limit ?? 20), 100);
 		const source = req.query.source as SourceType | undefined;
 		return { entries: getChronicle().recent(limit, source) };
 	}
 
-	@Route("GET", "/chronicle/entry/:id")
-	async getEntry(req: { params: { id: string } }) {
+	@Route("GET", "/entry/:id")
+	getEntry(req: { params: { id: string } }) {
 		const entry = getChronicle().getEntry(req.params.id);
 		if (!entry) return { error: "Entry not found" };
 		return entry;
 	}
 
-	@Route("POST", "/chronicle/entries")
-	async addEntry(req: { body: unknown }) {
+	@Route("POST", "/entries")
+	addEntry(req: { body: unknown }) {
 		const parsed = AddEntryBody.safeParse(req.body);
 		if (!parsed.success) {
 			return { error: "Invalid body", issues: parsed.error.issues };
@@ -199,16 +206,14 @@ export class ChronicleModule {
 		return { success: true, id: entry.id };
 	}
 
-	@Route("DELETE", "/chronicle/entries/:id")
-	async deleteEntry(req: { params: { id: string } }) {
+	@Route("DELETE", "/entries/:id")
+	deleteEntry(req: { params: { id: string } }) {
 		const deleted = getChronicle().deleteEntry(req.params.id);
 		return { success: deleted };
 	}
 
-	@Route("POST", "/chronicle/ingest/email")
-	async ingestEmail() {
-		// In production this would pull from the email module's stored messages.
-		// For now, return the count of already-indexed email entries.
+	@Route("POST", "/ingest/email")
+	ingestEmail() {
 		const stats = getChronicle().stats();
 		return {
 			success: true,
@@ -217,8 +222,8 @@ export class ChronicleModule {
 		};
 	}
 
-	@Route("POST", "/chronicle/ingest/photos")
-	async ingestPhotos() {
+	@Route("POST", "/ingest/photos")
+	ingestPhotos() {
 		const stats = getChronicle().stats();
 		return {
 			success: true,
@@ -226,47 +231,4 @@ export class ChronicleModule {
 			message: "Photo library ingestion complete",
 		};
 	}
-}
-
-export default async function chronicleModule(app: FastifyInstance) {
-	const mod = new ChronicleModule();
-
-	// Manually wire routes (loader picks these up automatically via @Route)
-	// This export is the functional-style entry point used by loader.ts
-
-	app.get("/chronicle/search", async (req) => {
-		return mod.search(req as { query: Record<string, string> });
-	});
-
-	app.get("/chronicle/stats", async () => mod.stats());
-
-	app.get("/chronicle/recent", async (req) => {
-		return mod.recent(req as { query: Record<string, string> });
-	});
-
-	app.get<{ Params: { id: string } }>("/chronicle/entry/:id", async (req) => {
-		return mod.getEntry(req);
-	});
-
-	app.post("/chronicle/entries", async (req) => {
-		return mod.addEntry(req);
-	});
-
-	app.delete<{ Params: { id: string } }>(
-		"/chronicle/entries/:id",
-		async (req) => {
-			return mod.deleteEntry(req);
-		},
-	);
-
-	app.post("/chronicle/ingest/email", async () => mod.ingestEmail());
-	app.post("/chronicle/ingest/photos", async () => mod.ingestPhotos());
-
-	return {
-		name: "chronicle",
-		version: "1.0.0",
-		description:
-			"Personal memory engine — search across emails, photos, files, and notes",
-		permissions: ["storage", "ai"],
-	};
 }
