@@ -3,97 +3,162 @@ import StatusCard from "../components/StatusCard.tsx";
 import { useApi } from "../hooks/useApi.ts";
 
 interface StatusData {
-  memory: { heapUsed: number; heapTotal: number; rss: number };
-  uptime: number;
+	memory: { heapUsed: number; heapTotal: number; rss: number };
+	uptime: number;
 }
 
-interface QuickAction {
-  id: Page;
-  label: string;
-  icon: string;
-  desc: string;
+interface WelcomeData {
+	version: string;
+	tagline: string;
 }
-
-const QUICK_ACTIONS: QuickAction[] = [
-  { id: "ai", label: "Solomon", icon: "◈", desc: "Ask anything" },
-  { id: "apps", label: "Apps", icon: "⊞", desc: "Installed modules" },
-  { id: "files", label: "Files", icon: "⊟", desc: "Browse storage" },
-];
 
 function greeting() {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
+	const h = new Date().getHours();
+	if (h < 5) return "Vigilate et orate";
+	if (h < 12) return "Bonum mane";
+	if (h < 17) return "Bona hora";
+	return "Bona vespera";
 }
 
-function fmtUptime(seconds: number) {
-  const d = Math.floor(seconds / 86400);
-  const h = Math.floor((seconds % 86400) / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  if (d > 0) return `${d}d ${h}h`;
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
+function fmtUptime(s: number) {
+	const d = Math.floor(s / 86400),
+		h = Math.floor((s % 86400) / 3600),
+		m = Math.floor((s % 3600) / 60);
+	if (d > 0) return `${d}d ${h}h`;
+	if (h > 0) return `${h}h ${m}m`;
+	return `${m}m`;
 }
 
-function fmtMb(bytes: number) {
-  return `${(bytes / 1024 / 1024).toFixed(0)} MB`;
+function fmtMb(b: number) {
+	return `${(b / 1024 / 1024).toFixed(0)} MB`;
 }
 
-export default function Dashboard({ onNavigate }: { onNavigate: (p: Page) => void }) {
-  const { data: status, loading } = useApi<StatusData>("/status");
+const ACTIONS: {
+	id: Page;
+	label: string;
+	latin: string;
+	icon: string;
+	desc: string;
+}[] = [
+	{
+		id: "ai",
+		label: "Solomon",
+		latin: "Sapientia",
+		icon: "✝",
+		desc: "Ask your private AI anything",
+	},
+	{
+		id: "apps",
+		label: "Relics",
+		latin: "Moduli",
+		icon: "❧",
+		desc: "Installed modules & extensions",
+	},
+	{
+		id: "files",
+		label: "Vault",
+		latin: "Archivum",
+		icon: "◈",
+		desc: "Your sovereign file storage",
+	},
+];
 
-  return (
-    <div className="p-6 md:p-10 max-w-4xl mx-auto animate-slide-up">
-      {/* Header */}
-      <div className="mb-10">
-        <p className="text-ark-muted text-sm mb-1">{greeting()}</p>
-        <h1 className="text-4xl md:text-5xl font-semibold tracking-tight">
-          Your <span className="text-ark-accent">Ark</span>
-        </h1>
-        <p className="text-ark-text-dim mt-2">All systems nominal. Your data stays yours.</p>
-      </div>
+export default function Dashboard({
+	onNavigate,
+}: {
+	onNavigate: (p: Page) => void;
+}) {
+	const { data: status, loading } = useApi<StatusData>("/status");
+	const { data: welcome } = useApi<WelcomeData>("/");
 
-      {/* Status Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
-        <StatusCard
-          icon="💾"
-          label="Heap Used"
-          value={loading ? "—" : fmtMb(status?.memory.heapUsed ?? 0)}
-          sub={loading ? "" : `of ${fmtMb(status?.memory.heapTotal ?? 0)}`}
-        />
-        <StatusCard
-          icon="📦"
-          label="RSS Memory"
-          value={loading ? "—" : fmtMb(status?.memory.rss ?? 0)}
-        />
-        <StatusCard
-          icon="⏱"
-          label="Uptime"
-          value={loading ? "—" : fmtUptime(status?.uptime ?? 0)}
-          accent
-        />
-      </div>
+	return (
+		<div className="relative min-h-full p-6 md:p-12 max-w-5xl mx-auto">
+			{/* Cross watermark */}
+			<div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
+				<span className="text-[600px] font-serif text-ark-gold/[0.015] leading-none">
+					✝
+				</span>
+			</div>
 
-      {/* Quick Actions */}
-      <div className="mb-4">
-        <h2 className="text-xs text-ark-muted uppercase tracking-widest mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {QUICK_ACTIONS.map((action) => (
-            <button
-              key={action.id}
-              onClick={() => onNavigate(action.id)}
-              className="bg-ark-card border border-ark-border rounded-2xl p-6 text-left hover:border-ark-accent/50 hover:shadow-ark-glow transition-all duration-200 group"
-            >
-              <span className="text-4xl block mb-3 group-hover:scale-110 transition-transform duration-200">
-                {action.icon}
-              </span>
-              <div className="font-medium">{action.label}</div>
-              <div className="text-sm text-ark-muted">{action.desc}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+			<div className="relative animate-slide-up">
+				{/* Header */}
+				<div className="mb-12">
+					<p className="text-ark-gold/60 text-sm font-sans tracking-[0.3em] uppercase mb-2">
+						{greeting()}
+					</p>
+					<h1 className="font-serif text-5xl md:text-6xl text-ark-ivory font-light tracking-wide mb-3">
+						Your <span className="text-gold-gradient">Ark</span>
+					</h1>
+					<div className="divider-gold w-32 mb-3" />
+					<p className="text-ark-muted font-sans text-sm">
+						{welcome?.tagline ?? "Your data. Your intelligence. Your Ark."}
+					</p>
+				</div>
+
+				{/* Status row */}
+				<div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-12">
+					<StatusCard
+						icon="◎"
+						label="Heap Memory"
+						value={loading ? "—" : fmtMb(status?.memory.heapUsed ?? 0)}
+						sub={loading ? "" : `of ${fmtMb(status?.memory.heapTotal ?? 0)}`}
+					/>
+					<StatusCard
+						icon="◉"
+						label="RSS Memory"
+						value={loading ? "—" : fmtMb(status?.memory.rss ?? 0)}
+					/>
+					<StatusCard
+						icon="✦"
+						label="Uptime"
+						value={loading ? "—" : fmtUptime(status?.uptime ?? 0)}
+						glow
+					/>
+				</div>
+
+				{/* Ornamental divider */}
+				<div className="flex items-center gap-4 mb-8">
+					<div className="divider-gold flex-1" />
+					<span className="text-ark-gold/40 text-sm font-serif italic">
+						Ministeria
+					</span>
+					<div className="divider-gold flex-1" />
+				</div>
+
+				{/* Quick actions */}
+				<div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+					{ACTIONS.map((action) => (
+						<button
+							key={action.id}
+							onClick={() => onNavigate(action.id)}
+							className="ark-card p-7 text-left group hover:border-ark-gold/40 hover:shadow-gold-glow transition-all duration-300 relative overflow-hidden"
+						>
+							<div className="absolute inset-0 bg-gold-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+							<div className="relative">
+								<span className="text-3xl text-ark-gold/70 group-hover:text-ark-gold block mb-4 transition-colors duration-200">
+									{action.icon}
+								</span>
+								<div className="font-serif text-xl text-ark-ivory mb-0.5">
+									{action.label}
+								</div>
+								<div className="text-[10px] tracking-[0.2em] uppercase text-ark-gold/50 font-sans mb-2">
+									{action.latin}
+								</div>
+								<p className="text-xs text-ark-muted font-sans leading-relaxed">
+									{action.desc}
+								</p>
+							</div>
+						</button>
+					))}
+				</div>
+
+				{/* Version badge */}
+				<div className="mt-12 text-center">
+					<span className="text-xs text-ark-dim/50 font-sans tracking-widest uppercase">
+						v{welcome?.version ?? "0.3.0"} · Codename Solomon
+					</span>
+				</div>
+			</div>
+		</div>
+	);
 }

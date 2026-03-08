@@ -1,10 +1,11 @@
-import { execSync, spawn } from "node:child_process";
+import { execSync } from "node:child_process";
 import type { ArkAPI, ArkManifest } from "../../types/module.ts";
 
 export const manifest: ArkManifest = {
 	name: "minecraft",
 	version: "1.0.0",
-	description: "One-click Minecraft Java server — deploy, start, stop, and monitor",
+	description:
+		"One-click Minecraft Java server — deploy, start, stop, and monitor",
 	icon: "⛏️",
 	permissions: ["docker", "storage", "network"],
 };
@@ -26,7 +27,9 @@ function containerStatus(): "running" | "stopped" | "missing" {
 		const out = execSync(
 			`docker inspect --format='{{.State.Status}}' ${CONTAINER_NAME} 2>/dev/null`,
 			{ encoding: "utf8" },
-		).trim().replace(/'/g, "");
+		)
+			.trim()
+			.replace(/'/g, "");
 		if (out === "running") return "running";
 		return "stopped";
 	} catch {
@@ -36,10 +39,14 @@ function containerStatus(): "running" | "stopped" | "missing" {
 
 function getContainerIP(): string | null {
 	try {
-		return execSync(
-			`docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${CONTAINER_NAME}`,
-			{ encoding: "utf8" },
-		).trim().replace(/'/g, "") || null;
+		return (
+			execSync(
+				`docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${CONTAINER_NAME}`,
+				{ encoding: "utf8" },
+			)
+				.trim()
+				.replace(/'/g, "") || null
+		);
 	} catch {
 		return null;
 	}
@@ -92,22 +99,38 @@ export const run = (api: ArkAPI) => {
 		// If container exists but stopped, just restart it
 		if (status === "stopped") {
 			execSync(`docker start ${CONTAINER_NAME}`);
-			return { ok: true, message: "Server restarted", container: CONTAINER_NAME };
+			return {
+				ok: true,
+				message: "Server restarted",
+				container: CONTAINER_NAME,
+			};
 		}
 
 		// Fresh deploy
 		const cmd = [
-			"docker", "run", "-d",
-			"--name", CONTAINER_NAME,
-			"-p", "25565:25565",
-			"-e", "EULA=TRUE",
-			"-e", `VERSION=${version}`,
-			"-e", `MEMORY=${memory}`,
-			"-e", `GAMEMODE=${gamemode}`,
-			"-e", `DIFFICULTY=${difficulty}`,
-			"-e", "ONLINE_MODE=FALSE",
-			"-v", `${CONTAINER_NAME}-data:/data`,
-			"--restart", "unless-stopped",
+			"docker",
+			"run",
+			"-d",
+			"--name",
+			CONTAINER_NAME,
+			"-p",
+			"25565:25565",
+			"-e",
+			"EULA=TRUE",
+			"-e",
+			`VERSION=${version}`,
+			"-e",
+			`MEMORY=${memory}`,
+			"-e",
+			`GAMEMODE=${gamemode}`,
+			"-e",
+			`DIFFICULTY=${difficulty}`,
+			"-e",
+			"ONLINE_MODE=FALSE",
+			"-v",
+			`${CONTAINER_NAME}-data:/data`,
+			"--restart",
+			"unless-stopped",
 			DEFAULT_IMAGE,
 		];
 
@@ -134,7 +157,8 @@ export const run = (api: ArkAPI) => {
 		}
 		const status = containerStatus();
 		if (status === "missing") return { ok: true, message: "No server to stop" };
-		if (status === "stopped") return { ok: true, message: "Server already stopped" };
+		if (status === "stopped")
+			return { ok: true, message: "Server already stopped" };
 		execSync(`docker stop ${CONTAINER_NAME}`);
 		return { ok: true, message: "Server stopped" };
 	});
@@ -164,9 +188,12 @@ export const run = (api: ArkAPI) => {
 		const query = req.query as { lines?: string };
 		const lines = Number(query.lines ?? 50);
 		try {
-			const logs = execSync(`docker logs --tail ${lines} ${CONTAINER_NAME} 2>&1`, {
-				encoding: "utf8",
-			});
+			const logs = execSync(
+				`docker logs --tail ${lines} ${CONTAINER_NAME} 2>&1`,
+				{
+					encoding: "utf8",
+				},
+			);
 			return { logs: logs.split("\n").filter(Boolean) };
 		} catch {
 			return { logs: [] };

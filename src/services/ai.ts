@@ -13,7 +13,9 @@ interface OllamaTagsResponse {
 
 export async function isOllamaAvailable(): Promise<boolean> {
 	try {
-		const res = await fetch(`${OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(3000) });
+		const res = await fetch(`${OLLAMA_URL}/api/tags`, {
+			signal: AbortSignal.timeout(3000),
+		});
 		return res.ok;
 	} catch {
 		return false;
@@ -22,7 +24,9 @@ export async function isOllamaAvailable(): Promise<boolean> {
 
 export async function listModels(): Promise<string[]> {
 	try {
-		const res = await fetch(`${OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(5000) });
+		const res = await fetch(`${OLLAMA_URL}/api/tags`, {
+			signal: AbortSignal.timeout(5000),
+		});
 		if (!res.ok) return [];
 		const data = (await res.json()) as OllamaTagsResponse;
 		return data.models?.map((m) => m.name) ?? [];

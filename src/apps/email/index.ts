@@ -9,7 +9,8 @@ import type { ArkAPI, ArkManifest } from "../../types/module.ts";
 export const manifest: ArkManifest = {
 	name: "email",
 	version: "1.0.0",
-	description: "Unified inbox — aggregate Gmail, Yahoo, Outlook and any IMAP account",
+	description:
+		"Unified inbox — aggregate Gmail, Yahoo, Outlook and any IMAP account",
 	icon: "✉️",
 	permissions: ["network", "storage"],
 };
@@ -38,7 +39,10 @@ interface EmailMessage {
 }
 
 // ---- Preset IMAP configs for common providers ----
-const IMAP_PRESETS: Record<string, { host: string; port: number; tls: boolean }> = {
+const IMAP_PRESETS: Record<
+	string,
+	{ host: string; port: number; tls: boolean }
+> = {
 	gmail: { host: "imap.gmail.com", port: 993, tls: true },
 	outlook: { host: "outlook.office365.com", port: 993, tls: true },
 	yahoo: { host: "imap.mail.yahoo.com", port: 993, tls: true },
@@ -122,7 +126,9 @@ export const run = (api: ArkAPI) => {
 			const preset = IMAP_PRESETS[body.provider.toLowerCase()];
 			if (!preset) {
 				reply.code(400);
-				return { error: `Unknown provider. Use one of: ${Object.keys(IMAP_PRESETS).join(", ")}` };
+				return {
+					error: `Unknown provider. Use one of: ${Object.keys(IMAP_PRESETS).join(", ")}`,
+				};
 			}
 			host = preset.host;
 			port = preset.port;
@@ -145,7 +151,14 @@ export const run = (api: ArkAPI) => {
 			return { error: "Account already exists" };
 		}
 
-		const account: EmailAccount = { id, label: body.label, host, port, tls, username: body.username };
+		const account: EmailAccount = {
+			id,
+			label: body.label,
+			host,
+			port,
+			tls,
+			username: body.username,
+		};
 		accounts.push(account);
 		await saveAccounts(accounts);
 
@@ -199,7 +212,12 @@ export const run = (api: ArkAPI) => {
 
 		// Fetch via IMAP using built-in net/tls
 		try {
-			const messages = await fetchImapMessages(account, password, limit, unseenOnly);
+			const messages = await fetchImapMessages(
+				account,
+				password,
+				limit,
+				unseenOnly,
+			);
 			return { account: account.label, count: messages.length, messages };
 		} catch (err) {
 			reply.code(502);
@@ -219,12 +237,27 @@ export const run = (api: ArkAPI) => {
 		const results = await Promise.allSettled(
 			accounts.map(async (account) => {
 				const password = creds[account.id];
-				if (!password) return { account: account.label, messages: [], error: "No credentials" };
+				if (!password)
+					return {
+						account: account.label,
+						messages: [],
+						error: "No credentials",
+					};
 				try {
-					const messages = await fetchImapMessages(account, password, limit, unseenOnly);
+					const messages = await fetchImapMessages(
+						account,
+						password,
+						limit,
+						unseenOnly,
+					);
 					return { account: account.label, accountId: account.id, messages };
 				} catch (err) {
-					return { account: account.label, accountId: account.id, messages: [], error: String(err) };
+					return {
+						account: account.label,
+						accountId: account.id,
+						messages: [],
+						error: String(err),
+					};
 				}
 			}),
 		);
@@ -237,12 +270,18 @@ export const run = (api: ArkAPI) => {
 		const allMessages = combined.flatMap((r) =>
 			r.messages.map((m: EmailMessage) => ({ ...m, source: r.account })),
 		);
-		allMessages.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+		allMessages.sort(
+			(a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+		);
 
 		return {
 			total: allMessages.length,
 			messages: allMessages.slice(0, limit),
-			accounts: combined.map((r) => ({ label: r.account, count: r.messages.length, error: r.error })),
+			accounts: combined.map((r) => ({
+				label: r.account,
+				count: r.messages.length,
+				error: r.error,
+			})),
 		};
 	});
 };
@@ -258,15 +297,23 @@ async function fetchImapMessages(
 	const tls = await import("node:tls");
 
 	return new Promise((resolve, reject) => {
-		const timeout = setTimeout(() => reject(new Error("IMAP connection timed out")), 15_000);
+		const timeout = setTimeout(
+			() => reject(new Error("IMAP connection timed out")),
+			15_000,
+		);
 		const messages: EmailMessage[] = [];
 		let buffer = "";
 		let tag = 1;
-		let phase: "greeting" | "login" | "select" | "search" | "fetch" | "done" = "greeting";
+		let phase: "greeting" | "login" | "select" | "search" | "fetch" | "done" =
+			"greeting";
 		let uids: number[] = [];
 
 		const socket = account.tls
-			? tls.connect({ host: account.host, port: account.port, rejectUnauthorized: false })
+			? tls.connect({
+					host: account.host,
+					port: account.port,
+					rejectUnauthorized: false,
+				})
 			: net.connect({ host: account.host, port: account.port });
 
 		const send = (cmd: string) => socket.write(`A${tag++} ${cmd}\r\n`);
@@ -287,14 +334,20 @@ async function fetchImapMessages(
 					phase = "search";
 					send(unseenOnly ? "UID SEARCH UNSEEN" : "UID SEARCH ALL");
 				} else if (phase === "search" && line.startsWith("* SEARCH")) {
-					const parts = line.replace("* SEARCH", "").trim().split(" ").filter(Boolean);
+					const parts = line
+						.replace("* SEARCH", "")
+						.trim()
+						.split(" ")
+						.filter(Boolean);
 					uids = parts.map(Number).filter(Boolean).slice(-limit).reverse();
 					if (uids.length === 0) {
 						phase = "done";
 						send("LOGOUT");
 					} else {
 						phase = "fetch";
-						send(`UID FETCH ${uids.join(",")} (FLAGS BODY.PEEK[HEADER.FIELDS (FROM SUBJECT DATE)])`);
+						send(
+							`UID FETCH ${uids.join(",")} (FLAGS BODY.PEEK[HEADER.FIELDS (FROM SUBJECT DATE)])`,
+						);
 					}
 				} else if (phase === "fetch") {
 					// Parse FETCH responses
@@ -303,7 +356,15 @@ async function fetchImapMessages(
 					} else if (line.startsWith("From:")) {
 						const last = messages[messages.length - 1];
 						if (last && !last.from) last.from = line.slice(5).trim();
-						else messages.push({ uid: 0, from: line.slice(5).trim(), subject: "", date: "", seen: false, snippet: "" });
+						else
+							messages.push({
+								uid: 0,
+								from: line.slice(5).trim(),
+								subject: "",
+								date: "",
+								seen: false,
+								snippet: "",
+							});
 					} else if (line.startsWith("Subject:")) {
 						const last = messages[messages.length - 1];
 						if (last) last.subject = line.slice(8).trim();

@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { resolve } from "node:path";
 import fastifyStatic from "@fastify/static";
 import Fastify from "fastify";
 import { loadApps } from "./apps/loader.ts";

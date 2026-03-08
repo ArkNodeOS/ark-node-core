@@ -1,23 +1,30 @@
-import type { ArkAPI, ArkManifest } from "../../types/module.ts";
+import "reflect-metadata";
+import { Module, OnInit, Route } from "../../decorators/index.ts";
+import type { ArkAPI } from "../../types/module.ts";
 
-export const manifest: ArkManifest = {
+@Module({
 	name: "hello-world",
 	version: "1.0.0",
-	description: "Example module — demonstrates the Ark module API",
+	description: "Example module — demonstrates the Ark decorator API",
 	icon: "👋",
 	permissions: ["storage"],
-};
+})
+export default class HelloWorldModule {
+	declare _api: ArkAPI;
 
-export const run = (api: ArkAPI) => {
-	api.log("Hello from hello-world module!");
+	@OnInit()
+	async setup() {
+		this._api.log("Module initialised via @OnInit");
+		await this._api.storage.save("greeting.txt", "Greetings from Ark Node");
+	}
 
-	api.registerRoute("GET", "/ping", async (_req, _reply) => ({
-		message: "pong",
-		module: manifest.name,
-		version: manifest.version,
-	}));
+	@Route("GET", "/ping")
+	async ping() {
+		return { message: "pong", module: "hello-world", version: "1.0.0" };
+	}
 
-	api.registerRoute("POST", "/echo", async (req, _reply) => ({
-		echo: req.body,
-	}));
-};
+	@Route("POST", "/echo")
+	async echo(req: any) {
+		return { echo: req.body };
+	}
+}

@@ -1,10 +1,2 @@
 [test]
-# Test file pattern
-preload = []
 timeout = 30000
-
-[test.coverage]
-# Generate coverage reports
-reporter = ["text", "lcov"]
-include = ["src/**/*.ts"]
-exclude = ["src/web/**", "**/*.d.ts"]

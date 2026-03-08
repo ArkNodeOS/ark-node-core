@@ -1,101 +1,146 @@
 import { useRef } from "react";
 import { useApi } from "../hooks/useApi.ts";
 
-interface StorageResponse {
-  files: string[];
-}
-
 const BASE = import.meta.env.DEV ? "/api" : "";
 
 export default function Files() {
-  const { data, loading, error, refetch } = useApi<StorageResponse>("/storage");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+	const { data, loading, error, refetch } = useApi<{ files: string[] }>(
+		"/storage",
+	);
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
-  async function uploadFile(file: File) {
-    const buf = await file.arrayBuffer();
-    await fetch(`${BASE}/storage/${encodeURIComponent(file.name)}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/octet-stream" },
-      body: buf,
-    });
-    refetch();
-  }
+	async function uploadFile(file: File) {
+		const buf = await file.arrayBuffer();
+		await fetch(`${BASE}/storage/${encodeURIComponent(file.name)}`, {
+			method: "POST",
+			headers: { "Content-Type": "application/octet-stream" },
+			body: buf,
+		});
+		refetch();
+	}
 
-  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (!files) return;
-    for (const f of Array.from(files)) uploadFile(f);
-  }
+	function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+		const files = e.target.files;
+		if (files) for (const f of Array.from(files)) uploadFile(f);
+	}
 
-  function onDrop(e: React.DragEvent) {
-    e.preventDefault();
-    for (const f of Array.from(e.dataTransfer.files)) uploadFile(f);
-  }
+	function onDrop(e: React.DragEvent) {
+		e.preventDefault();
+		for (const f of Array.from(e.dataTransfer.files)) uploadFile(f);
+	}
 
-  return (
-    <div className="p-6 md:p-10 max-w-4xl mx-auto animate-slide-up">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Files</h1>
-          <p className="text-ark-text-dim mt-1">Your private storage</p>
-        </div>
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-ark-accent hover:bg-ark-accent-glow text-white text-sm transition-all"
-        >
-          <span>↑</span> Upload
-        </button>
-        <input ref={fileInputRef} type="file" multiple className="hidden" onChange={onFileChange} />
-      </div>
+	function fileIcon(name: string) {
+		const ext = name.split(".").pop()?.toLowerCase();
+		if (["jpg", "jpeg", "png", "gif", "webp", "heic"].includes(ext ?? ""))
+			return "◈";
+		if (["mp4", "mov", "mkv", "avi"].includes(ext ?? "")) return "▷";
+		if (["mp3", "m4a", "flac", "wav"].includes(ext ?? "")) return "♫";
+		if (["pdf", "doc", "docx", "txt", "md"].includes(ext ?? "")) return "❧";
+		if (["zip", "tar", "gz", "7z"].includes(ext ?? "")) return "⊠";
+		return "◉";
+	}
 
-      {/* Drop zone */}
-      <div
-        onDrop={onDrop}
-        onDragOver={(e) => e.preventDefault()}
-        className="border-2 border-dashed border-ark-border rounded-2xl p-8 text-center mb-6 hover:border-ark-accent/50 transition-colors cursor-pointer"
-        onClick={() => fileInputRef.current?.click()}
-      >
-        <div className="text-3xl mb-2">⊟</div>
-        <div className="text-sm text-ark-muted">Drop files here or click to upload</div>
-      </div>
+	return (
+		<div className="relative p-6 md:p-12 max-w-4xl mx-auto animate-slide-up">
+			{/* Header */}
+			<div className="flex items-start justify-between mb-10">
+				<div>
+					<p className="text-ark-gold/50 text-xs tracking-[0.3em] uppercase font-sans mb-2">
+						Archivum
+					</p>
+					<h1 className="font-serif text-5xl text-ark-ivory font-light tracking-wide">
+						Vault
+					</h1>
+					<div className="divider-gold w-24 mt-3" />
+				</div>
+				<button
+					onClick={() => fileInputRef.current?.click()}
+					className="btn-gold mt-4"
+				>
+					<span>↑</span> Upload
+				</button>
+				<input
+					ref={fileInputRef}
+					type="file"
+					multiple
+					className="hidden"
+					onChange={onFileChange}
+				/>
+			</div>
 
-      {loading && (
-        <div className="space-y-2">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-14 bg-ark-card rounded-xl animate-pulse2" />
-          ))}
-        </div>
-      )}
+			{/* Drop zone */}
+			<div
+				onDrop={onDrop}
+				onDragOver={(e) => e.preventDefault()}
+				onClick={() => fileInputRef.current?.click()}
+				className="ark-card p-10 text-center mb-6 cursor-pointer
+                      hover:border-ark-gold/30 hover:shadow-gold-subtle
+                      transition-all duration-300 group"
+			>
+				<span className="text-3xl text-ark-gold/30 group-hover:text-ark-gold/60 block mb-3 transition-colors">
+					◈
+				</span>
+				<p className="text-sm text-ark-muted font-sans">
+					Drop files here or click to upload
+				</p>
+				<p className="text-xs text-ark-dim/50 font-sans mt-1 tracking-widest uppercase">
+					Stored privately on your Ark
+				</p>
+			</div>
 
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 text-red-300 text-sm">
-          Error: {error}
-        </div>
-      )}
+			{loading && (
+				<div className="space-y-2">
+					{[1, 2, 3].map((i) => (
+						<div
+							key={i}
+							className="ark-card h-14 animate-pulse-gold opacity-30"
+						/>
+					))}
+				</div>
+			)}
 
-      {data && (
-        <div className="space-y-2">
-          {data.files.length === 0 ? (
-            <div className="text-center py-12 text-ark-muted">
-              <p>No files yet. Upload something!</p>
-            </div>
-          ) : (
-            data.files.map((file) => (
-              <a
-                key={file}
-                href={`${BASE}/storage/${encodeURIComponent(file)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-4 bg-ark-card border border-ark-border rounded-xl px-5 py-4 hover:border-ark-accent/30 transition-all group"
-              >
-                <span className="text-xl text-ark-muted">⊟</span>
-                <span className="flex-1 text-sm truncate">{file}</span>
-                <span className="text-xs text-ark-muted group-hover:text-ark-accent transition-colors">↓</span>
-              </a>
-            ))
-          )}
-        </div>
-      )}
-    </div>
-  );
+			{error && (
+				<div className="ark-card p-4 border-ark-crimson/30 text-ark-crimson/80 text-sm font-sans">
+					Error: {error}
+				</div>
+			)}
+
+			{data &&
+				(data.files.length === 0 ? (
+					<div className="text-center py-16 text-ark-dim">
+						<div className="font-serif text-xl mb-2">The Vault is empty</div>
+						<p className="text-sm font-sans">Upload your first file to begin</p>
+					</div>
+				) : (
+					<>
+						<p className="text-xs text-ark-gold/40 tracking-widest uppercase font-sans mb-4">
+							{data.files.length} {data.files.length === 1 ? "item" : "items"}
+						</p>
+						<div className="space-y-2">
+							{data.files.map((file) => (
+								<a
+									key={file}
+									href={`${BASE}/storage/${encodeURIComponent(file)}`}
+									target="_blank"
+									rel="noreferrer"
+									className="flex items-center gap-4 ark-card px-5 py-4
+                                hover:border-ark-gold/30 hover:shadow-gold-subtle
+                                transition-all duration-200 group"
+								>
+									<span className="text-lg text-ark-gold/50 group-hover:text-ark-gold/80 transition-colors w-5 text-center">
+										{fileIcon(file)}
+									</span>
+									<span className="flex-1 text-sm font-sans text-ark-parchment truncate">
+										{file}
+									</span>
+									<span className="text-xs text-ark-dim group-hover:text-ark-gold/50 transition-colors font-sans">
+										↓
+									</span>
+								</a>
+							))}
+						</div>
+					</>
+				))}
+		</div>
+	);
 }

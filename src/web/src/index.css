@@ -2,33 +2,108 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
-  box-sizing: border-box;
+@layer base {
+	* {
+		box-sizing: border-box;
+	}
+
+	html {
+		scroll-behavior: smooth;
+	}
+
+	body {
+		background-color: #060402;
+		color: #f5f0e0;
+		font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+		overflow-x: hidden;
+	}
+
+	/* Cormorant for all headings */
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		font-family: "Cormorant Garamond", Garamond, Georgia, serif;
+	}
+
+	::selection {
+		background: rgba(201, 168, 76, 0.3);
+		color: #f5f0e0;
+	}
+
+	:focus-visible {
+		outline: 1px solid rgba(201, 168, 76, 0.7);
+		outline-offset: 2px;
+		border-radius: 6px;
+	}
+
+	::-webkit-scrollbar {
+		width: 4px;
+		height: 4px;
+	}
+	::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	::-webkit-scrollbar-thumb {
+		background: #3a2a10;
+		border-radius: 2px;
+	}
+	::-webkit-scrollbar-thumb:hover {
+		background: #c9a84c44;
+	}
 }
 
-body {
-  background-color: #0a0a0f;
-  color: #f1f5f9;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+@layer components {
+	/* Ornamental divider */
+	.divider-gold {
+		@apply w-full h-px bg-gradient-to-r from-transparent via-ark-border to-transparent;
+	}
+
+	/* Gold text gradient */
+	.text-gold-gradient {
+		background: linear-gradient(135deg, #c9a84c 0%, #e2c06a 50%, #c9a84c 100%);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+	}
+
+	/* Card base */
+	.ark-card {
+		@apply bg-ark-card border border-ark-border rounded-ark-lg shadow-card;
+		box-shadow:
+			0 4px 32px rgba(0, 0, 0, 0.6),
+			inset 0 1px 0 rgba(201, 168, 76, 0.08);
+	}
+
+	/* Gold button */
+	.btn-gold {
+		@apply inline-flex items-center gap-2 px-5 py-2.5 rounded-ark font-sans text-sm font-medium
+           bg-ark-gold text-ark-void hover:bg-ark-gold-bright
+           transition-all duration-200 shadow-gold-subtle;
+	}
+
+	/* Ghost button */
+	.btn-ghost {
+		@apply inline-flex items-center gap-2 px-5 py-2.5 rounded-ark font-sans text-sm
+           border border-ark-border text-ark-muted hover:border-ark-gold hover:text-ark-gold
+           transition-all duration-200;
+	}
 }
 
-:focus-visible {
-  outline: 2px solid #6366f1;
-  outline-offset: 2px;
-  border-radius: 6px;
-}
-
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #2a2a3a;
-  border-radius: 3px;
+/* Ornamental cross watermark */
+.cross-watermark::before {
+	content: "✝";
+	position: absolute;
+	font-size: 400px;
+	color: rgba(201, 168, 76, 0.015);
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+	font-family: "Cormorant Garamond", serif;
+	user-select: none;
 }

@@ -8,20 +8,24 @@ import Files from "./pages/Files.tsx";
 export type Page = "dashboard" | "ai" | "apps" | "files";
 
 export default function App() {
-  const [page, setPage] = useState<Page>("dashboard");
+	const [page, setPage] = useState<Page>("dashboard");
 
-  const renderPage = () => {
-    switch (page) {
-      case "dashboard": return <Dashboard onNavigate={setPage} />;
-      case "ai": return <AIChat />;
-      case "apps": return <Apps />;
-      case "files": return <Files />;
-    }
-  };
+	const renderPage = () => {
+		switch (page) {
+			case "dashboard":
+				return <Dashboard onNavigate={setPage} />;
+			case "ai":
+				return <AIChat />;
+			case "apps":
+				return <Apps />;
+			case "files":
+				return <Files />;
+		}
+	};
 
-  return (
-    <Layout page={page} onNavigate={setPage}>
-      {renderPage()}
-    </Layout>
-  );
+	return (
+		<Layout page={page} onNavigate={setPage}>
+			{renderPage()}
+		</Layout>
+	);
 }

@@ -9,11 +9,17 @@ import { join, resolve } from "node:path";
 const STORAGE_DIR = resolve(import.meta.dirname, "../../storage");
 
 function sanitizePath(filePath: string): string {
-	const normalized = filePath.replace(/\.\./g, "").replace(/^\/+/, "");
-	if (!normalized || normalized === ".gitkeep") {
+	if (!filePath) throw new Error(`Invalid path: empty`);
+	// Resolve to absolute path and confirm it stays inside STORAGE_DIR
+	const resolved = resolve(STORAGE_DIR, filePath);
+	if (!resolved.startsWith(`${STORAGE_DIR}/`) && resolved !== STORAGE_DIR) {
+		throw new Error(`Path traversal detected: "${filePath}"`);
+	}
+	const relative = resolved.slice(STORAGE_DIR.length + 1);
+	if (!relative || relative === ".gitkeep") {
 		throw new Error(`Invalid path: "${filePath}"`);
 	}
-	return normalized;
+	return relative;
 }
 
 export async function initStorage(): Promise<void> {

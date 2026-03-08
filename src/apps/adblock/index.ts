@@ -9,7 +9,8 @@ import type { ArkAPI, ArkManifest } from "../../types/module.ts";
 export const manifest: ArkManifest = {
 	name: "adblock",
 	version: "1.0.0",
-	description: "Network-wide ad blocking via Pi-hole DNS sinkhole — kills YouTube ads, trackers, and malware domains",
+	description:
+		"Network-wide ad blocking via Pi-hole DNS sinkhole — kills YouTube ads, trackers, and malware domains",
 	icon: "🛡️",
 	permissions: ["docker", "network", "system"],
 };
@@ -32,14 +33,21 @@ function containerStatus(): "running" | "stopped" | "missing" {
 		const out = execSync(
 			`docker inspect --format='{{.State.Status}}' ${CONTAINER_NAME} 2>/dev/null`,
 			{ encoding: "utf8" },
-		).trim().replace(/'/g, "");
+		)
+			.trim()
+			.replace(/'/g, "");
 		return out === "running" ? "running" : "stopped";
 	} catch {
 		return "missing";
 	}
 }
 
-function getBlockStats(): { domains_being_blocked: number; dns_queries_today: number; ads_blocked_today: number; ads_percentage_today: number } | null {
+function getBlockStats(): {
+	domains_being_blocked: number;
+	dns_queries_today: number;
+	ads_blocked_today: number;
+	ads_percentage_today: number;
+} | null {
 	try {
 		// Query Pi-hole's local API
 		const raw = execSync(
@@ -67,11 +75,13 @@ export const run = (api: ArkAPI) => {
 			status,
 			container: CONTAINER_NAME,
 			dns_port: DNS_PORT,
-			web_ui: status === "running" ? `http://<your-ark-ip>:${WEB_PORT}/admin` : null,
+			web_ui:
+				status === "running" ? `http://<your-ark-ip>:${WEB_PORT}/admin` : null,
 			stats,
-			setup_hint: status === "running"
-				? `Set your router's DNS server to <your-ark-ip>:${DNS_PORT} to block ads network-wide`
-				: "Start Pi-hole first",
+			setup_hint:
+				status === "running"
+					? `Set your router's DNS server to <your-ark-ip>:${DNS_PORT} to block ads network-wide`
+					: "Start Pi-hole first",
 		};
 	});
 
@@ -83,11 +93,17 @@ export const run = (api: ArkAPI) => {
 		}
 
 		const status = containerStatus();
-		if (status === "running") return { ok: true, message: "Pi-hole is already running" };
+		if (status === "running")
+			return { ok: true, message: "Pi-hole is already running" };
 
 		if (status === "stopped") {
 			execSync(`docker start ${CONTAINER_NAME}`);
-			return { ok: true, message: "Pi-hole restarted", dns_port: DNS_PORT, web_port: WEB_PORT };
+			return {
+				ok: true,
+				message: "Pi-hole restarted",
+				dns_port: DNS_PORT,
+				web_port: WEB_PORT,
+			};
 		}
 
 		const body = (req.body ?? {}) as { password?: string; timezone?: string };
@@ -95,20 +111,35 @@ export const run = (api: ArkAPI) => {
 		const tz = body.timezone ?? "America/Chicago";
 
 		const cmd = [
-			"docker", "run", "-d",
-			"--name", CONTAINER_NAME,
-			"-p", `${DNS_PORT}:53/tcp`,
-			"-p", `${DNS_PORT}:53/udp`,
-			"-p", `${WEB_PORT}:80`,
-			"-e", `TZ=${tz}`,
-			"-e", `WEBPASSWORD=${password}`,
-			"-e", "DNSMASQ_LISTENING=all",
-			"-v", `${CONTAINER_NAME}-etc:/etc/pihole`,
-			"-v", `${CONTAINER_NAME}-dnsmasq:/etc/dnsmasq.d`,
-			"--dns", "127.0.0.1",
-			"--dns", "1.1.1.1",
-			"--restart", "unless-stopped",
-			"--cap-add", "NET_ADMIN",
+			"docker",
+			"run",
+			"-d",
+			"--name",
+			CONTAINER_NAME,
+			"-p",
+			`${DNS_PORT}:53/tcp`,
+			"-p",
+			`${DNS_PORT}:53/udp`,
+			"-p",
+			`${WEB_PORT}:80`,
+			"-e",
+			`TZ=${tz}`,
+			"-e",
+			`WEBPASSWORD=${password}`,
+			"-e",
+			"DNSMASQ_LISTENING=all",
+			"-v",
+			`${CONTAINER_NAME}-etc:/etc/pihole`,
+			"-v",
+			`${CONTAINER_NAME}-dnsmasq:/etc/dnsmasq.d`,
+			"--dns",
+			"127.0.0.1",
+			"--dns",
+			"1.1.1.1",
+			"--restart",
+			"unless-stopped",
+			"--cap-add",
+			"NET_ADMIN",
 			"pihole/pihole:latest",
 		];
 
@@ -135,7 +166,8 @@ export const run = (api: ArkAPI) => {
 			reply.code(503);
 			return { error: "Docker is not available" };
 		}
-		if (containerStatus() !== "running") return { ok: true, message: "Pi-hole is not running" };
+		if (containerStatus() !== "running")
+			return { ok: true, message: "Pi-hole is not running" };
 		execSync(`docker stop ${CONTAINER_NAME}`);
 		return { ok: true, message: "Pi-hole stopped" };
 	});
@@ -152,7 +184,10 @@ export const run = (api: ArkAPI) => {
 				{ encoding: "utf8", timeout: 5000 },
 			);
 			const data = JSON.parse(raw);
-			return { top_blocked: data.top_ads ?? {}, top_queries: data.top_queries ?? {} };
+			return {
+				top_blocked: data.top_ads ?? {},
+				top_queries: data.top_queries ?? {},
+			};
 		} catch (err) {
 			reply.code(502);
 			return { error: String(err) };
