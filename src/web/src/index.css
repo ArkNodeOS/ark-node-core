@@ -1,7 +1,76 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
+/* ── Ark Node theme ────────────────────────────────────────────────────── */
+@theme {
+	/* Colors — Backgrounds */
+	--color-ark-void: #060402;
+	--color-ark-bg: #0c0804;
+	--color-ark-surface: #130d06;
+	--color-ark-card: #1a1108;
+	--color-ark-raised: #221608;
+	--color-ark-border: #3a2a10;
+
+	/* Colors — Gold */
+	--color-ark-gold: #c9a84c;
+	--color-ark-gold-bright: #e2c06a;
+	--color-ark-gold-dim: #8a6b28;
+	--color-ark-gold-glow: #d4af37;
+
+	/* Colors — Crimson */
+	--color-ark-crimson: #8b1a1a;
+	--color-ark-crimson-bright: #b02020;
+
+	/* Colors — Royal */
+	--color-ark-royal: #0b1b3a;
+	--color-ark-royal-bright: #1a3a6a;
+
+	/* Colors — Text */
+	--color-ark-ivory: #f5f0e0;
+	--color-ark-parchment: #ddd0b0;
+	--color-ark-muted: #9a8a6a;
+	--color-ark-dim: #6a5a3a;
+
+	/* Fonts */
+	--font-serif: "Cormorant Garamond", Garamond, Georgia, serif;
+	--font-sans: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+
+	/* Shadows */
+	--shadow-gold-glow: 0 0 30px rgba(201, 168, 76, 0.2),
+		0 0 60px rgba(201, 168, 76, 0.08);
+	--shadow-gold-subtle: 0 2px 20px rgba(201, 168, 76, 0.12);
+	--shadow-card: 0 4px 32px rgba(0, 0, 0, 0.6);
+	--shadow-inner-gold: inset 0 1px 0 rgba(201, 168, 76, 0.3);
+
+	/* Border radius */
+	--radius-ark: 12px;
+	--radius-ark-lg: 20px;
+
+	/* Animations */
+	--animate-fade-in: fadeIn 0.4s ease-out;
+	--animate-slide-up: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+	--animate-shimmer: shimmer 3s ease-in-out infinite;
+	--animate-pulse-gold: pulseGold 2s ease-in-out infinite;
+}
+
+/* ── Keyframes ─────────────────────────────────────────────────────────── */
+@keyframes fadeIn {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+@keyframes slideUp {
+	from { opacity: 0; transform: translateY(16px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+	0%, 100% { background-position: 200% center; }
+	50% { background-position: 0% center; }
+}
+@keyframes pulseGold {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.4; }
+}
+
+/* ── Base styles ───────────────────────────────────────────────────────── */
 @layer base {
 	* {
 		box-sizing: border-box;
@@ -20,13 +89,7 @@
 		overflow-x: hidden;
 	}
 
-	/* Cormorant for all headings */
-	h1,
-	h2,
-	h3,
-	h4,
-	h5,
-	h6 {
+	h1, h2, h3, h4, h5, h6 {
 		font-family: "Cormorant Garamond", Garamond, Georgia, serif;
 	}
 
@@ -41,29 +104,18 @@
 		border-radius: 6px;
 	}
 
-	::-webkit-scrollbar {
-		width: 4px;
-		height: 4px;
-	}
-	::-webkit-scrollbar-track {
-		background: transparent;
-	}
-	::-webkit-scrollbar-thumb {
-		background: #3a2a10;
-		border-radius: 2px;
-	}
-	::-webkit-scrollbar-thumb:hover {
-		background: #c9a84c44;
-	}
+	::-webkit-scrollbar { width: 4px; height: 4px; }
+	::-webkit-scrollbar-track { background: transparent; }
+	::-webkit-scrollbar-thumb { background: #3a2a10; border-radius: 2px; }
+	::-webkit-scrollbar-thumb:hover { background: #c9a84c44; }
 }
 
+/* ── Component utilities ───────────────────────────────────────────────── */
 @layer components {
-	/* Ornamental divider */
 	.divider-gold {
-		@apply w-full h-px bg-gradient-to-r from-transparent via-ark-border to-transparent;
+		@apply w-full h-px bg-linear-to-r from-transparent via-ark-border to-transparent;
 	}
 
-	/* Gold text gradient */
 	.text-gold-gradient {
 		background: linear-gradient(135deg, #c9a84c 0%, #e2c06a 50%, #c9a84c 100%);
 		-webkit-background-clip: text;
@@ -71,7 +123,6 @@
 		background-clip: text;
 	}
 
-	/* Card base */
 	.ark-card {
 		@apply bg-ark-card border border-ark-border rounded-ark-lg shadow-card;
 		box-shadow:
@@ -79,14 +130,12 @@
 			inset 0 1px 0 rgba(201, 168, 76, 0.08);
 	}
 
-	/* Gold button */
 	.btn-gold {
 		@apply inline-flex items-center gap-2 px-5 py-2.5 rounded-ark font-sans text-sm font-medium
            bg-ark-gold text-ark-void hover:bg-ark-gold-bright
            transition-all duration-200 shadow-gold-subtle;
 	}
 
-	/* Ghost button */
 	.btn-ghost {
 		@apply inline-flex items-center gap-2 px-5 py-2.5 rounded-ark font-sans text-sm
            border border-ark-border text-ark-muted hover:border-ark-gold hover:text-ark-gold
@@ -94,7 +143,25 @@
 	}
 }
 
-/* Ornamental cross watermark */
+/* ── Custom utilities ──────────────────────────────────────────────────── */
+@utility bg-ark-vignette {
+	background-image: radial-gradient(ellipse at center, #1a1108 0%, #060402 100%);
+}
+
+@utility bg-gold-gradient {
+	background-image: linear-gradient(135deg, #c9a84c 0%, #e2c06a 50%, #c9a84c 100%);
+}
+
+@utility bg-gold-shimmer {
+	background-image: linear-gradient(
+		90deg,
+		transparent 0%,
+		rgba(201, 168, 76, 0.15) 50%,
+		transparent 100%
+	);
+}
+
+/* ── Cross watermark ───────────────────────────────────────────────────── */
 .cross-watermark::before {
 	content: "✝";
 	position: absolute;
