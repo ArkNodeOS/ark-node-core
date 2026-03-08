@@ -24,7 +24,9 @@ function StatusBadge({ status }: { status: BackupJob["status"] }) {
 		running: "text-ark-gold border-ark-gold/40 bg-ark-gold/10 animate-pulse",
 	};
 	return (
-		<span className={`text-[10px] font-sans uppercase tracking-widest border rounded px-2 py-0.5 ${styles[status]}`}>
+		<span
+			className={`text-[10px] font-sans uppercase tracking-widest border rounded px-2 py-0.5 ${styles[status]}`}
+		>
 			{status}
 		</span>
 	);
@@ -61,8 +63,11 @@ export default function BackupManager() {
 				scheduleMinutes: jobSchedule ? parseInt(jobSchedule, 10) : undefined,
 				excludes: jobExcludes.trim() || undefined,
 			});
-			setJobName(""); setJobType("local"); setJobSource("");
-			setJobSchedule(""); setJobExcludes("");
+			setJobName("");
+			setJobType("local");
+			setJobSource("");
+			setJobSchedule("");
+			setJobExcludes("");
 			setShowNewJob(false);
 			await refetch();
 		} catch (e) {
@@ -120,7 +125,9 @@ export default function BackupManager() {
 			{/* Header */}
 			<div>
 				<h1 className="font-serif text-3xl text-gold-gradient mb-1">Backup</h1>
-				<p className="text-ark-muted text-sm font-sans tracking-wide">Custodia · Job Manager</p>
+				<p className="text-ark-muted text-sm font-sans tracking-wide">
+					Custodia · Job Manager
+				</p>
 				<div className="divider-gold mt-3" />
 			</div>
 
@@ -134,7 +141,9 @@ export default function BackupManager() {
 			<div className="flex items-center justify-between">
 				<h2 className="font-serif text-xl text-ark-ivory">
 					Jobs{" "}
-					{!loading && <span className="text-ark-muted text-base">({jobs.length})</span>}
+					{!loading && (
+						<span className="text-ark-muted text-base">({jobs.length})</span>
+					)}
 				</h2>
 				<button onClick={() => setShowNewJob(true)} className="btn-gold">
 					+ New Job
@@ -143,12 +152,16 @@ export default function BackupManager() {
 
 			{/* Jobs List */}
 			{loading ? (
-				<div className="text-ark-muted font-sans text-sm py-6 text-center">Loading…</div>
+				<div className="text-ark-muted font-sans text-sm py-6 text-center">
+					Loading…
+				</div>
 			) : jobs.length === 0 ? (
 				<div className="ark-card p-10 text-center space-y-2">
 					<div className="text-5xl">💾</div>
 					<p className="font-serif text-xl text-ark-ivory">No backup jobs</p>
-					<p className="text-ark-muted text-sm font-sans">Create your first job to protect your data.</p>
+					<p className="text-ark-muted text-sm font-sans">
+						Create your first job to protect your data.
+					</p>
 				</div>
 			) : (
 				<div className="space-y-3">
@@ -157,13 +170,17 @@ export default function BackupManager() {
 							<div className="flex items-start justify-between flex-wrap gap-3">
 								<div className="flex-1 min-w-0">
 									<div className="flex items-center gap-3 flex-wrap">
-										<span className="font-serif text-lg text-ark-ivory">{job.name}</span>
+										<span className="font-serif text-lg text-ark-ivory">
+											{job.name}
+										</span>
 										<StatusBadge status={job.status} />
 										<span className="text-[10px] font-sans text-ark-muted uppercase border border-ark-border/50 rounded px-1.5 py-0.5">
 											{job.type}
 										</span>
 									</div>
-									<div className="mt-1 font-mono text-xs text-ark-muted truncate">{job.source}</div>
+									<div className="mt-1 font-mono text-xs text-ark-muted truncate">
+										{job.source}
+									</div>
 									<div className="flex gap-4 mt-1.5 text-[11px] text-ark-muted font-sans flex-wrap">
 										{job.scheduleMinutes != null && (
 											<span>Every {job.scheduleMinutes}m</span>
@@ -203,13 +220,19 @@ export default function BackupManager() {
 			{showNewJob && (
 				<div
 					className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-					onClick={(e) => { if (e.target === e.currentTarget) setShowNewJob(false); }}
+					onClick={(e) => {
+						if (e.target === e.currentTarget) setShowNewJob(false);
+					}}
 				>
 					<div className="ark-card p-6 w-full max-w-md space-y-4 animate-slide-up overflow-y-auto max-h-[90vh]">
-						<h3 className="font-serif text-xl text-ark-ivory">New Backup Job</h3>
+						<h3 className="font-serif text-xl text-ark-ivory">
+							New Backup Job
+						</h3>
 						<div className="space-y-3">
 							<div>
-								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">Job Name</label>
+								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">
+									Job Name
+								</label>
 								<input
 									type="text"
 									value={jobName}
@@ -219,10 +242,14 @@ export default function BackupManager() {
 								/>
 							</div>
 							<div>
-								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">Type</label>
+								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">
+									Type
+								</label>
 								<select
 									value={jobType}
-									onChange={(e) => setJobType(e.target.value as "local" | "ssh")}
+									onChange={(e) =>
+										setJobType(e.target.value as "local" | "ssh")
+									}
 									className="w-full bg-ark-bg border border-ark-border rounded-ark px-3 py-2 text-ark-ivory font-sans text-sm focus:outline-none focus:border-ark-gold/50"
 								>
 									<option value="local">Local</option>
@@ -230,7 +257,9 @@ export default function BackupManager() {
 								</select>
 							</div>
 							<div>
-								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">Source Path</label>
+								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">
+									Source Path
+								</label>
 								<input
 									type="text"
 									value={jobSource}
@@ -240,7 +269,9 @@ export default function BackupManager() {
 								/>
 							</div>
 							<div>
-								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">Schedule (minutes, optional)</label>
+								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">
+									Schedule (minutes, optional)
+								</label>
 								<input
 									type="number"
 									value={jobSchedule}
@@ -251,7 +282,9 @@ export default function BackupManager() {
 								/>
 							</div>
 							<div>
-								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">Excludes (one per line)</label>
+								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">
+									Excludes (one per line)
+								</label>
 								<textarea
 									value={jobExcludes}
 									onChange={(e) => setJobExcludes(e.target.value)}
@@ -269,7 +302,10 @@ export default function BackupManager() {
 							>
 								{creating ? "Creating…" : "Create Job"}
 							</button>
-							<button onClick={() => setShowNewJob(false)} className="btn-ghost flex-1">
+							<button
+								onClick={() => setShowNewJob(false)}
+								className="btn-ghost flex-1"
+							>
 								Cancel
 							</button>
 						</div>
@@ -281,21 +317,37 @@ export default function BackupManager() {
 			{logsJobId && (
 				<div
 					className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-					onClick={(e) => { if (e.target === e.currentTarget) setLogsJobId(null); }}
+					onClick={(e) => {
+						if (e.target === e.currentTarget) setLogsJobId(null);
+					}}
 				>
 					<div className="ark-card p-6 w-full max-w-2xl space-y-4 animate-slide-up">
 						<div className="flex items-center justify-between">
-							<h3 className="font-serif text-xl text-ark-ivory">Logs — {logsJobName}</h3>
-							<button onClick={() => setLogsJobId(null)} className="text-ark-muted hover:text-ark-ivory text-lg">✕</button>
+							<h3 className="font-serif text-xl text-ark-ivory">
+								Logs — {logsJobName}
+							</h3>
+							<button
+								onClick={() => setLogsJobId(null)}
+								className="text-ark-muted hover:text-ark-ivory text-lg"
+							>
+								✕
+							</button>
 						</div>
 						<div className="bg-black/60 border border-ark-border rounded-ark p-4 h-72 overflow-y-auto font-mono text-xs text-green-300 space-y-0.5">
 							{logsLoading ? (
 								<span className="text-ark-muted italic">Loading…</span>
 							) : logsContent.length === 0 ? (
-								<span className="text-ark-muted italic">No logs available.</span>
+								<span className="text-ark-muted italic">
+									No logs available.
+								</span>
 							) : (
 								logsContent.map((line, i) => (
-									<div key={i} className="leading-relaxed whitespace-pre-wrap break-all">{line}</div>
+									<div
+										key={i}
+										className="leading-relaxed whitespace-pre-wrap break-all"
+									>
+										{line}
+									</div>
 								))
 							)}
 						</div>

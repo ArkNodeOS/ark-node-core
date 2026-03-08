@@ -12,21 +12,28 @@
  * Also supports rclone push from the phone side.
  */
 import "reflect-metadata";
-import { createReadStream, existsSync } from "node:fs";
-import { mkdir, readdir, stat, unlink, writeFile } from "node:fs/promises";
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
+import { stat } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { z } from "zod";
 import { Module, OnInit, Route } from "../../decorators/index.ts";
 import type { ArkAPI } from "../../types/module.ts";
 
-const STORAGE_DIR = resolve(import.meta.dirname, "../../../storage/phone-backup");
+const STORAGE_DIR = resolve(
+	import.meta.dirname,
+	"../../../storage/phone-backup",
+);
 
 const PairSchema = z.object({
 	deviceName: z.string().min(1).max(64),
-	pin: z.string().length(6).regex(/^\d{6}$/).optional(),
+	pin: z
+		.string()
+		.length(6)
+		.regex(/^\d{6}$/)
+		.optional(),
 });
 
+// biome-ignore lint/correctness/noUnusedVariables: reserved for future rclone push endpoint
 const RcloneUploadSchema = z.object({
 	token: z.string().min(32),
 	filename: z.string().min(1),
@@ -48,7 +55,8 @@ const DEVICES_FILE = "devices.json";
 @Module({
 	name: "phone-backup",
 	version: "1.0.0",
-	description: "Back up your phone's camera roll to Ark over WiFi — WebDAV + rclone",
+	description:
+		"Back up your phone's camera roll to Ark over WiFi — WebDAV + rclone",
 	icon: "📱",
 	permissions: ["storage", "network"],
 })
@@ -100,7 +108,7 @@ export default class PhoneBackupModule {
 	async listDevices() {
 		return {
 			devices: [...this.devices.values()].map((d) => ({
-				token: d.token.slice(0, 8) + "...", // partial token for display
+				token: `${d.token.slice(0, 8)}...`, // partial token for display
 				fullToken: d.token,
 				deviceName: d.deviceName,
 				pairedAt: d.pairedAt,
@@ -130,11 +138,15 @@ export default class PhoneBackupModule {
 		const { execSync } = await import("node:child_process");
 		const host = (() => {
 			try {
-				return execSync(
-					"ip route show default | awk '/default/{print $3}' | head -1",
-					{ encoding: "utf8" },
-				).trim() || "YOUR-ARK-IP";
-			} catch { return "YOUR-ARK-IP"; }
+				return (
+					execSync(
+						"ip route show default | awk '/default/{print $3}' | head -1",
+						{ encoding: "utf8" },
+					).trim() || "YOUR-ARK-IP"
+				);
+			} catch {
+				return "YOUR-ARK-IP";
+			}
 		})();
 
 		const device: PairedDevice = {
@@ -160,7 +172,9 @@ export default class PhoneBackupModule {
 			`vendor = other`,
 		].join("\n");
 
-		this._api.log(`Paired device: ${deviceName} (token: ${token.slice(0, 8)}...)`);
+		this._api.log(
+			`Paired device: ${deviceName} (token: ${token.slice(0, 8)}...)`,
+		);
 
 		return {
 			ok: true,
@@ -195,7 +209,10 @@ export default class PhoneBackupModule {
 	// Phones write files here via WebDAV PUT
 	@Route("PUT", "/dav/:token/:filename")
 	async webdavPut(req: any, reply: any) {
-		const { token, filename } = req.params as { token: string; filename: string };
+		const { token, filename } = req.params as {
+			token: string;
+			filename: string;
+		};
 		const device = this.devices.get(token);
 
 		if (!device || !device.enabled) {
@@ -256,9 +273,15 @@ export default class PhoneBackupModule {
 	// ---- GET /phone-backup/dav/:token/:filename — download backed up file ----
 	@Route("GET", "/dav/:token/:filename")
 	async webdavGet(req: any, reply: any) {
-		const { token, filename } = req.params as { token: string; filename: string };
+		const { token, filename } = req.params as {
+			token: string;
+			filename: string;
+		};
 		const device = this.devices.get(token);
-		if (!device) { reply.code(401); return { error: "Invalid token" }; }
+		if (!device) {
+			reply.code(401);
+			return { error: "Invalid token" };
+		}
 
 		try {
 			const data = await this._api.storage.get(`devices/${token}/${filename}`);
@@ -290,14 +313,21 @@ export default class PhoneBackupModule {
 
 	// ---- POST /phone-backup/devices/:token/enable|disable ----
 	@Route("POST", "/devices/:token/enable")
-	async enable(req: any, reply: any) { return this.toggle((req.params as any).token, true, reply); }
+	async enable(req: any, reply: any) {
+		return this.toggle((req.params as any).token, true, reply);
+	}
 
 	@Route("POST", "/devices/:token/disable")
-	async disable(req: any, reply: any) { return this.toggle((req.params as any).token, false, reply); }
+	async disable(req: any, reply: any) {
+		return this.toggle((req.params as any).token, false, reply);
+	}
 
 	private async toggle(token: string, enabled: boolean, reply: any) {
 		const device = this.devices.get(token);
-		if (!device) { reply.code(404); return { error: "Device not found" }; }
+		if (!device) {
+			reply.code(404);
+			return { error: "Device not found" };
+		}
 		device.enabled = enabled;
 		await this.saveDevices();
 		return { ok: true, enabled };

@@ -8,8 +8,10 @@ import type { FastifyInstance } from "fastify";
 // Mock execSync before the module loads
 const mockExecSync = mock((cmd: string, _opts?: any): string | Buffer => {
 	if (cmd.includes("docker info")) return "";
-	if (cmd.includes("docker inspect") && cmd.includes("State.Status")) return "running\n";
-	if (cmd.includes("docker inspect") && cmd.includes("IPAddress")) return "172.17.0.2\n";
+	if (cmd.includes("docker inspect") && cmd.includes("State.Status"))
+		return "running\n";
+	if (cmd.includes("docker inspect") && cmd.includes("IPAddress"))
+		return "172.17.0.2\n";
 	if (cmd.includes("docker run")) return "abc123containerid\n";
 	if (cmd.includes("docker stop")) return "";
 	if (cmd.includes("docker start")) return "";
@@ -21,7 +23,11 @@ const mockExecSync = mock((cmd: string, _opts?: any): string | Buffer => {
 
 mock.module("node:child_process", () => ({
 	execSync: mockExecSync,
-	spawn: mock(() => ({ on: mock(() => {}), stdout: { on: mock(() => {}) }, stderr: { on: mock(() => {}) } })),
+	spawn: mock(() => ({
+		on: mock(() => {}),
+		stdout: { on: mock(() => {}) },
+		stderr: { on: mock(() => {}) },
+	})),
 }));
 
 import { buildTestServer } from "../helpers/server.ts";
@@ -67,7 +73,11 @@ describe("minecraft module", () => {
 			method: "POST",
 			url: "/minecraft/start",
 			headers: { "content-type": "application/json" },
-			payload: JSON.stringify({ version: "1.21", memory: "2G", gamemode: "creative" }),
+			payload: JSON.stringify({
+				version: "1.21",
+				memory: "2G",
+				gamemode: "creative",
+			}),
 		});
 		// Either ok (deployed) or already running — both are valid
 		expect([200, 201]).toContain(res.statusCode);
@@ -83,21 +93,29 @@ describe("minecraft module", () => {
 	});
 
 	it("GET /minecraft/logs — returns log lines array", async () => {
-		const res = await app.inject({ method: "GET", url: "/minecraft/logs?lines=20" });
+		const res = await app.inject({
+			method: "GET",
+			url: "/minecraft/logs?lines=20",
+		});
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
 		expect(Array.isArray(body.logs)).toBe(true);
 	});
 
 	it("DELETE /minecraft/destroy — removes container and volume", async () => {
-		const res = await app.inject({ method: "DELETE", url: "/minecraft/destroy" });
+		const res = await app.inject({
+			method: "DELETE",
+			url: "/minecraft/destroy",
+		});
 		expect(res.statusCode).toBe(200);
 		expect(res.json().ok).toBe(true);
 	});
 
 	it("is listed in /apps with docker permission", async () => {
 		const res = await app.inject({ method: "GET", url: "/apps" });
-		const { apps } = res.json() as { apps: { name: string; permissions: string[] }[] };
+		const { apps } = res.json() as {
+			apps: { name: string; permissions: string[] }[];
+		};
 		const mc = apps.find((a) => a.name === "minecraft");
 		expect(mc).toBeDefined();
 		expect(mc!.permissions).toContain("docker");

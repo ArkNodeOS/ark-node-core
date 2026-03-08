@@ -51,8 +51,16 @@ function formatDate(dateStr: string) {
 }
 
 export default function EmailInbox() {
-	const { data: accountsData, loading: acctLoading, refetch: refetchAccounts } = useApi<AccountsResponse>("/email/accounts");
-	const { data: inboxData, loading: inboxLoading, refetch: refetchInbox } = useApi<InboxResponse>("/email/inbox");
+	const {
+		data: accountsData,
+		loading: acctLoading,
+		refetch: refetchAccounts,
+	} = useApi<AccountsResponse>("/email/accounts");
+	const {
+		data: inboxData,
+		loading: inboxLoading,
+		refetch: refetchInbox,
+	} = useApi<InboxResponse>("/email/inbox");
 
 	const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
 	const [showAddAccount, setShowAddAccount] = useState(false);
@@ -82,7 +90,10 @@ export default function EmailInbox() {
 				username: acctUsername.trim(),
 				password: acctPassword,
 			});
-			setAcctLabel(""); setAcctProvider("gmail"); setAcctUsername(""); setAcctPassword("");
+			setAcctLabel("");
+			setAcctProvider("gmail");
+			setAcctUsername("");
+			setAcctPassword("");
 			setShowAddAccount(false);
 			await refetchAccounts();
 			await refetchInbox();
@@ -97,8 +108,12 @@ export default function EmailInbox() {
 		<div className="p-6 space-y-6 animate-fade-in">
 			{/* Header */}
 			<div>
-				<h1 className="font-serif text-3xl text-gold-gradient mb-1">Epistulae</h1>
-				<p className="text-ark-muted text-sm font-sans tracking-wide">Nuntius · Unified Inbox</p>
+				<h1 className="font-serif text-3xl text-gold-gradient mb-1">
+					Epistulae
+				</h1>
+				<p className="text-ark-muted text-sm font-sans tracking-wide">
+					Nuntius · Unified Inbox
+				</p>
 				<div className="divider-gold mt-3" />
 			</div>
 
@@ -113,7 +128,10 @@ export default function EmailInbox() {
 				<div className="lg:w-64 shrink-0 space-y-3">
 					<div className="flex items-center justify-between">
 						<h2 className="font-serif text-lg text-ark-ivory">Accounts</h2>
-						<button onClick={() => setShowAddAccount(true)} className="btn-gold text-xs px-3 py-1.5">
+						<button
+							onClick={() => setShowAddAccount(true)}
+							className="btn-gold text-xs px-3 py-1.5"
+						>
 							+ Add
 						</button>
 					</div>
@@ -153,8 +171,12 @@ export default function EmailInbox() {
 									}`}
 								>
 									<div className="min-w-0">
-										<div className="font-sans text-sm text-ark-ivory truncate">{acct.label}</div>
-										<div className="text-[10px] text-ark-muted truncate">{acct.username}</div>
+										<div className="font-sans text-sm text-ark-ivory truncate">
+											{acct.label}
+										</div>
+										<div className="text-[10px] text-ark-muted truncate">
+											{acct.username}
+										</div>
 									</div>
 									{acct.unread > 0 && (
 										<span className="ml-2 shrink-0 text-xs bg-ark-gold text-ark-bg rounded-full px-2 py-0.5 font-sans font-semibold">
@@ -165,7 +187,9 @@ export default function EmailInbox() {
 							))}
 
 							{accounts.length === 0 && !acctLoading && (
-								<p className="text-ark-muted text-xs font-sans text-center py-4">No accounts yet.</p>
+								<p className="text-ark-muted text-xs font-sans text-center py-4">
+									No accounts yet.
+								</p>
 							)}
 						</div>
 					)}
@@ -176,11 +200,15 @@ export default function EmailInbox() {
 					<div className="flex items-center justify-between mb-4">
 						<h2 className="font-serif text-lg text-ark-ivory">
 							{selectedAccount
-								? accounts.find((a) => a.id === selectedAccount)?.label ?? "Inbox"
+								? (accounts.find((a) => a.id === selectedAccount)?.label ??
+									"Inbox")
 								: "All Messages"}
 						</h2>
 						<button
-							onClick={() => { refetchInbox(); refetchAccounts(); }}
+							onClick={() => {
+								refetchInbox();
+								refetchAccounts();
+							}}
 							className="btn-ghost text-xs px-3 py-1.5"
 						>
 							↻ Refresh
@@ -188,12 +216,18 @@ export default function EmailInbox() {
 					</div>
 
 					{inboxLoading ? (
-						<div className="text-center py-16 text-ark-muted font-sans">Loading messages…</div>
+						<div className="text-center py-16 text-ark-muted font-sans">
+							Loading messages…
+						</div>
 					) : messages.length === 0 ? (
 						<div className="text-center py-16 space-y-3 animate-fade-in">
 							<div className="text-6xl opacity-40">✉</div>
-							<p className="font-serif text-2xl text-ark-ivory">Omnia Silentia</p>
-							<p className="text-ark-muted font-sans text-sm">All is quiet. No messages here.</p>
+							<p className="font-serif text-2xl text-ark-ivory">
+								Omnia Silentia
+							</p>
+							<p className="text-ark-muted font-sans text-sm">
+								All is quiet. No messages here.
+							</p>
 							{accounts.length === 0 && (
 								<button
 									onClick={() => setShowAddAccount(true)}
@@ -213,17 +247,25 @@ export default function EmailInbox() {
 									<div className="flex items-start justify-between gap-3 flex-wrap">
 										<div className="flex-1 min-w-0">
 											<div className="flex items-center gap-2 flex-wrap">
-												<span className="font-sans font-semibold text-ark-ivory text-sm truncate">{msg.from}</span>
+												<span className="font-sans font-semibold text-ark-ivory text-sm truncate">
+													{msg.from}
+												</span>
 												<span className="text-[10px] font-sans bg-ark-gold/10 text-ark-gold border border-ark-gold/20 rounded px-1.5 py-0.5 shrink-0">
 													{msg.accountLabel}
 												</span>
 											</div>
-											<p className="text-ark-ivory text-sm mt-0.5 truncate">{msg.subject}</p>
+											<p className="text-ark-ivory text-sm mt-0.5 truncate">
+												{msg.subject}
+											</p>
 											{msg.preview && (
-												<p className="text-ark-muted text-xs mt-0.5 truncate">{msg.preview}</p>
+												<p className="text-ark-muted text-xs mt-0.5 truncate">
+													{msg.preview}
+												</p>
 											)}
 										</div>
-										<span className="text-ark-muted text-xs font-sans shrink-0 mt-0.5">{formatDate(msg.date)}</span>
+										<span className="text-ark-muted text-xs font-sans shrink-0 mt-0.5">
+											{formatDate(msg.date)}
+										</span>
 									</div>
 								</div>
 							))}
@@ -236,13 +278,19 @@ export default function EmailInbox() {
 			{showAddAccount && (
 				<div
 					className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-					onClick={(e) => { if (e.target === e.currentTarget) setShowAddAccount(false); }}
+					onClick={(e) => {
+						if (e.target === e.currentTarget) setShowAddAccount(false);
+					}}
 				>
 					<div className="ark-card p-6 w-full max-w-md space-y-4 animate-slide-up">
-						<h3 className="font-serif text-xl text-ark-ivory">Add Email Account</h3>
+						<h3 className="font-serif text-xl text-ark-ivory">
+							Add Email Account
+						</h3>
 						<div className="space-y-3">
 							<div>
-								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">Label</label>
+								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">
+									Label
+								</label>
 								<input
 									type="text"
 									value={acctLabel}
@@ -252,19 +300,25 @@ export default function EmailInbox() {
 								/>
 							</div>
 							<div>
-								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">Provider</label>
+								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">
+									Provider
+								</label>
 								<select
 									value={acctProvider}
 									onChange={(e) => setAcctProvider(e.target.value)}
 									className="w-full bg-ark-bg border border-ark-border rounded-ark px-3 py-2 text-ark-ivory font-sans text-sm focus:outline-none focus:border-ark-gold/50"
 								>
 									{PROVIDERS.map((p) => (
-										<option key={p.value} value={p.value}>{p.label}</option>
+										<option key={p.value} value={p.value}>
+											{p.label}
+										</option>
 									))}
 								</select>
 							</div>
 							<div>
-								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">Username / Email</label>
+								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">
+									Username / Email
+								</label>
 								<input
 									type="email"
 									value={acctUsername}
@@ -274,7 +328,9 @@ export default function EmailInbox() {
 								/>
 							</div>
 							<div>
-								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">Password / App Password</label>
+								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">
+									Password / App Password
+								</label>
 								<input
 									type="password"
 									value={acctPassword}
@@ -287,12 +343,20 @@ export default function EmailInbox() {
 						<div className="flex gap-3">
 							<button
 								onClick={handleAddAccount}
-								disabled={adding || !acctLabel.trim() || !acctUsername.trim() || !acctPassword}
+								disabled={
+									adding ||
+									!acctLabel.trim() ||
+									!acctUsername.trim() ||
+									!acctPassword
+								}
 								className="btn-gold flex-1 disabled:opacity-50"
 							>
 								{adding ? "Adding…" : "Add Account"}
 							</button>
-							<button onClick={() => setShowAddAccount(false)} className="btn-ghost flex-1">
+							<button
+								onClick={() => setShowAddAccount(false)}
+								className="btn-ghost flex-1"
+							>
 								Cancel
 							</button>
 						</div>

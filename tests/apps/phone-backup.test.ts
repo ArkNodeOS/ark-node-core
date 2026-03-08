@@ -5,26 +5,37 @@ const mockExecSync = mock((cmd: string): string => {
 	if (cmd.includes("ip route show default")) return "192.168.1.1";
 	return "";
 });
-mock.module("node:child_process", () => ({ execSync: mockExecSync, spawn: mock(() => ({})) }));
+mock.module("node:child_process", () => ({
+	execSync: mockExecSync,
+	spawn: mock(() => ({})),
+}));
 
 import { buildTestServer } from "../helpers/server.ts";
 
 let app: FastifyInstance;
 let deviceToken = "";
 
-beforeAll(async () => { app = await buildTestServer(); });
-afterAll(async () => { await app.close(); });
+beforeAll(async () => {
+	app = await buildTestServer();
+});
+afterAll(async () => {
+	await app.close();
+});
 
 describe("phone-backup module", () => {
 	it("GET /phone-backup/devices — returns empty array initially", async () => {
-		const res = await app.inject({ method: "GET", url: "/phone-backup/devices" });
+		const res = await app.inject({
+			method: "GET",
+			url: "/phone-backup/devices",
+		});
 		expect(res.statusCode).toBe(200);
 		expect(Array.isArray(res.json().devices)).toBe(true);
 	});
 
 	it("POST /phone-backup/pair — 400 without deviceName", async () => {
 		const res = await app.inject({
-			method: "POST", url: "/phone-backup/pair",
+			method: "POST",
+			url: "/phone-backup/pair",
 			headers: { "content-type": "application/json" },
 			payload: JSON.stringify({}),
 		});
@@ -33,7 +44,8 @@ describe("phone-backup module", () => {
 
 	it("POST /phone-backup/pair — creates a pairing for iPhone", async () => {
 		const res = await app.inject({
-			method: "POST", url: "/phone-backup/pair",
+			method: "POST",
+			url: "/phone-backup/pair",
 			headers: { "content-type": "application/json" },
 			payload: JSON.stringify({ deviceName: "iPhone" }),
 		});
@@ -54,7 +66,8 @@ describe("phone-backup module", () => {
 
 	it("POST /phone-backup/pair — accepts custom 6-digit PIN", async () => {
 		const res = await app.inject({
-			method: "POST", url: "/phone-backup/pair",
+			method: "POST",
+			url: "/phone-backup/pair",
 			headers: { "content-type": "application/json" },
 			payload: JSON.stringify({ deviceName: "Android", pin: "123456" }),
 		});
@@ -63,7 +76,10 @@ describe("phone-backup module", () => {
 	});
 
 	it("GET /phone-backup/devices — lists paired device", async () => {
-		const res = await app.inject({ method: "GET", url: "/phone-backup/devices" });
+		const res = await app.inject({
+			method: "GET",
+			url: "/phone-backup/devices",
+		});
 		expect(res.statusCode).toBe(200);
 		const { devices } = res.json();
 		expect(devices.length).toBeGreaterThanOrEqual(1);
@@ -85,7 +101,10 @@ describe("phone-backup module", () => {
 
 	it("GET /phone-backup/dav/:token — lists uploaded files", async () => {
 		if (!deviceToken) return;
-		const res = await app.inject({ method: "GET", url: `/phone-backup/dav/${deviceToken}` });
+		const res = await app.inject({
+			method: "GET",
+			url: `/phone-backup/dav/${deviceToken}`,
+		});
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
 		expect(Array.isArray(body.files)).toBe(true);
@@ -103,7 +122,10 @@ describe("phone-backup module", () => {
 
 	it("POST /phone-backup/devices/:token/disable — disables device", async () => {
 		if (!deviceToken) return;
-		const res = await app.inject({ method: "POST", url: `/phone-backup/devices/${deviceToken}/disable` });
+		const res = await app.inject({
+			method: "POST",
+			url: `/phone-backup/devices/${deviceToken}/disable`,
+		});
 		expect(res.statusCode).toBe(200);
 		expect(res.json().enabled).toBe(false);
 	});
@@ -121,7 +143,10 @@ describe("phone-backup module", () => {
 
 	it("POST /phone-backup/devices/:token/enable — re-enables device", async () => {
 		if (!deviceToken) return;
-		const res = await app.inject({ method: "POST", url: `/phone-backup/devices/${deviceToken}/enable` });
+		const res = await app.inject({
+			method: "POST",
+			url: `/phone-backup/devices/${deviceToken}/enable`,
+		});
 		expect(res.statusCode).toBe(200);
 		expect(res.json().enabled).toBe(true);
 	});
@@ -137,7 +162,10 @@ describe("phone-backup module", () => {
 
 	it("DELETE /phone-backup/devices/:token — unpairs device", async () => {
 		if (!deviceToken) return;
-		const res = await app.inject({ method: "DELETE", url: `/phone-backup/devices/${deviceToken}` });
+		const res = await app.inject({
+			method: "DELETE",
+			url: `/phone-backup/devices/${deviceToken}`,
+		});
 		expect(res.statusCode).toBe(200);
 		expect(res.json().ok).toBe(true);
 	});

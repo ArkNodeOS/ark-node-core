@@ -6,7 +6,8 @@ import type { FastifyInstance } from "fastify";
 
 const mockExecSync = mock((cmd: string, _opts?: any): string | Buffer => {
 	if (cmd.includes("docker info")) return "";
-	if (cmd.includes("docker inspect") && cmd.includes("State.Status")) return "running\n";
+	if (cmd.includes("docker inspect") && cmd.includes("State.Status"))
+		return "running\n";
 	if (cmd.includes("docker run")) return "pihole123\n";
 	if (cmd.includes("docker stop")) return "";
 	if (cmd.includes("docker start")) return "";
@@ -76,7 +77,10 @@ describe("adblock module", () => {
 			method: "POST",
 			url: "/adblock/start",
 			headers: { "content-type": "application/json" },
-			payload: JSON.stringify({ password: "test-pass", timezone: "America/Chicago" }),
+			payload: JSON.stringify({
+				password: "test-pass",
+				timezone: "America/Chicago",
+			}),
 		});
 		expect([200, 201]).toContain(res.statusCode);
 		expect(res.json()).toHaveProperty("ok");
@@ -129,14 +133,19 @@ describe("adblock module", () => {
 	});
 
 	it("POST /adblock/update-lists — triggers blocklist update", async () => {
-		const res = await app.inject({ method: "POST", url: "/adblock/update-lists" });
+		const res = await app.inject({
+			method: "POST",
+			url: "/adblock/update-lists",
+		});
 		expect(res.statusCode).toBe(200);
 		expect(res.json().ok).toBe(true);
 	});
 
 	it("is listed in /apps with docker + network + system permissions", async () => {
 		const res = await app.inject({ method: "GET", url: "/apps" });
-		const { apps } = res.json() as { apps: { name: string; permissions: string[] }[] };
+		const { apps } = res.json() as {
+			apps: { name: string; permissions: string[] }[];
+		};
 		const ab = apps.find((a) => a.name === "adblock");
 		expect(ab).toBeDefined();
 		expect(ab!.permissions).toContain("docker");

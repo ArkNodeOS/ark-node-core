@@ -212,7 +212,6 @@ export default class BackupModule {
 
 		// Get absolute path for rsync dest
 		const { resolve: pathResolve } = await import("node:path");
-		const { resolve: appResolve } = await import("node:path");
 		const storageBase = pathResolve(
 			import.meta.dirname,
 			"../../../storage/backup",

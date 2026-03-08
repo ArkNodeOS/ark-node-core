@@ -19,15 +19,22 @@ const mockExecSync = mock((cmd: string): string => {
 	return "";
 });
 
-mock.module("node:child_process", () => ({ execSync: mockExecSync, spawn: mockSpawn }));
+mock.module("node:child_process", () => ({
+	execSync: mockExecSync,
+	spawn: mockSpawn,
+}));
 
 import { buildTestServer } from "../helpers/server.ts";
 
 let app: FastifyInstance;
 let jobId = "";
 
-beforeAll(async () => { app = await buildTestServer(); });
-afterAll(async () => { await app.close(); });
+beforeAll(async () => {
+	app = await buildTestServer();
+});
+afterAll(async () => {
+	await app.close();
+});
 
 describe("backup module", () => {
 	it("GET /backup/status — returns health info", async () => {
@@ -46,7 +53,8 @@ describe("backup module", () => {
 
 	it("POST /backup/jobs — creates a local backup job", async () => {
 		const res = await app.inject({
-			method: "POST", url: "/backup/jobs",
+			method: "POST",
+			url: "/backup/jobs",
 			headers: { "content-type": "application/json" },
 			payload: JSON.stringify({
 				name: "Test Local Backup",
@@ -66,7 +74,8 @@ describe("backup module", () => {
 
 	it("POST /backup/jobs — creates an SSH backup job", async () => {
 		const res = await app.inject({
-			method: "POST", url: "/backup/jobs",
+			method: "POST",
+			url: "/backup/jobs",
 			headers: { "content-type": "application/json" },
 			payload: JSON.stringify({
 				name: "Phone Backup",
@@ -83,7 +92,8 @@ describe("backup module", () => {
 
 	it("POST /backup/jobs — 400 when name is missing", async () => {
 		const res = await app.inject({
-			method: "POST", url: "/backup/jobs",
+			method: "POST",
+			url: "/backup/jobs",
 			headers: { "content-type": "application/json" },
 			payload: JSON.stringify({ type: "local", source: "/tmp" }),
 		});
@@ -92,7 +102,10 @@ describe("backup module", () => {
 
 	it("GET /backup/jobs/:id — returns job details", async () => {
 		if (!jobId) return;
-		const res = await app.inject({ method: "GET", url: `/backup/jobs/${jobId}` });
+		const res = await app.inject({
+			method: "GET",
+			url: `/backup/jobs/${jobId}`,
+		});
 		expect(res.statusCode).toBe(200);
 		const body = res.json();
 		expect(body.job.name).toBe("Test Local Backup");
@@ -100,27 +113,39 @@ describe("backup module", () => {
 	});
 
 	it("GET /backup/jobs/:id — 404 for nonexistent job", async () => {
-		const res = await app.inject({ method: "GET", url: "/backup/jobs/nonexistent-xyz" });
+		const res = await app.inject({
+			method: "GET",
+			url: "/backup/jobs/nonexistent-xyz",
+		});
 		expect(res.statusCode).toBe(404);
 	});
 
 	it("POST /backup/jobs/:id/run — triggers manual run", async () => {
 		if (!jobId) return;
-		const res = await app.inject({ method: "POST", url: `/backup/jobs/${jobId}/run` });
+		const res = await app.inject({
+			method: "POST",
+			url: `/backup/jobs/${jobId}/run`,
+		});
 		expect(res.statusCode).toBe(200);
 		expect(res.json().ok).toBe(true);
 	});
 
 	it("GET /backup/jobs/:id/logs — returns log array", async () => {
 		if (!jobId) return;
-		const res = await app.inject({ method: "GET", url: `/backup/jobs/${jobId}/logs` });
+		const res = await app.inject({
+			method: "GET",
+			url: `/backup/jobs/${jobId}/logs`,
+		});
 		expect(res.statusCode).toBe(200);
 		expect(Array.isArray(res.json().log)).toBe(true);
 	});
 
 	it("DELETE /backup/jobs/:id — removes the job", async () => {
 		if (!jobId) return;
-		const res = await app.inject({ method: "DELETE", url: `/backup/jobs/${jobId}` });
+		const res = await app.inject({
+			method: "DELETE",
+			url: `/backup/jobs/${jobId}`,
+		});
 		expect(res.statusCode).toBe(200);
 		expect(res.json().ok).toBe(true);
 	});

@@ -36,7 +36,9 @@ describe("hello-world module", () => {
 
 	it("is listed in GET /apps with correct manifest", async () => {
 		const res = await app.inject({ method: "GET", url: "/apps" });
-		const { apps } = res.json() as { apps: { name: string; version: string; permissions: string[] }[] };
+		const { apps } = res.json() as {
+			apps: { name: string; version: string; permissions: string[] }[];
+		};
 		const hw = apps.find((a) => a.name === "hello-world");
 		expect(hw).toBeDefined();
 		expect(hw!.version).toBe("1.0.0");

@@ -19,14 +19,43 @@ interface DevicesResponse {
 }
 
 const FIREWALL_PRESETS = [
-	{ label: "Block Telnet", rule: { type: "block", port: 23, protocol: "tcp", desc: "Block Telnet (port 23)" } },
-	{ label: "Block SSH from WAN", rule: { type: "block-wan", port: 22, protocol: "tcp", desc: "Block SSH from WAN" } },
-	{ label: "Allow HTTP/HTTPS", rule: { type: "allow", port: "80,443", protocol: "tcp", desc: "Allow HTTP/HTTPS" } },
+	{
+		label: "Block Telnet",
+		rule: {
+			type: "block",
+			port: 23,
+			protocol: "tcp",
+			desc: "Block Telnet (port 23)",
+		},
+	},
+	{
+		label: "Block SSH from WAN",
+		rule: {
+			type: "block-wan",
+			port: 22,
+			protocol: "tcp",
+			desc: "Block SSH from WAN",
+		},
+	},
+	{
+		label: "Allow HTTP/HTTPS",
+		rule: {
+			type: "allow",
+			port: "80,443",
+			protocol: "tcp",
+			desc: "Allow HTTP/HTTPS",
+		},
+	},
 ];
 
 export default function RouterDashboard() {
-	const { data: netInfo, loading: netLoading, refetch: refetchNet } = useApi<NetworkInfo>("/router/network");
-	const { data: devicesData, loading: devLoading } = useApi<DevicesResponse>("/router/devices");
+	const {
+		data: netInfo,
+		loading: netLoading,
+		refetch: refetchNet,
+	} = useApi<NetworkInfo>("/router/network");
+	const { data: devicesData, loading: devLoading } =
+		useApi<DevicesResponse>("/router/devices");
 
 	const [error, setError] = useState<string | null>(null);
 	const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -69,7 +98,12 @@ export default function RouterDashboard() {
 		setDnsLoading(true);
 		setError(null);
 		try {
-			await apiPost("/router/dns/set", { servers: dnsManual.split(",").map((s) => s.trim()).filter(Boolean) });
+			await apiPost("/router/dns/set", {
+				servers: dnsManual
+					.split(",")
+					.map((s) => s.trim())
+					.filter(Boolean),
+			});
 			setDnsManual("");
 			flash("DNS updated");
 			await refetchNet();
@@ -80,7 +114,7 @@ export default function RouterDashboard() {
 		}
 	};
 
-	const handleFirewallPreset = async (preset: typeof FIREWALL_PRESETS[0]) => {
+	const handleFirewallPreset = async (preset: (typeof FIREWALL_PRESETS)[0]) => {
 		setFwLoading(true);
 		setError(null);
 		try {
@@ -104,7 +138,10 @@ export default function RouterDashboard() {
 				internalPort: parseInt(pfIntPort, 10),
 				protocol: pfProto,
 			});
-			setPfExtPort(""); setPfIntIp(""); setPfIntPort(""); setPfProto("tcp");
+			setPfExtPort("");
+			setPfIntIp("");
+			setPfIntPort("");
+			setPfProto("tcp");
 			flash("Port forward created");
 		} catch (e) {
 			setError(String(e));
@@ -120,7 +157,9 @@ export default function RouterDashboard() {
 			{/* Header */}
 			<div>
 				<h1 className="font-serif text-3xl text-gold-gradient mb-1">Router</h1>
-				<p className="text-ark-muted text-sm font-sans tracking-wide">Retis · Network Control Center</p>
+				<p className="text-ark-muted text-sm font-sans tracking-wide">
+					Retis · Network Control Center
+				</p>
 				<div className="divider-gold mt-3" />
 			</div>
 
@@ -148,8 +187,13 @@ export default function RouterDashboard() {
 								["Local IP", netInfo?.localIp ?? "—"],
 								["Public IP", netInfo?.publicIp ?? "—"],
 							].map(([k, v]) => (
-								<div key={k} className="flex justify-between items-center py-2 border-b border-ark-border/40 last:border-0">
-									<span className="text-ark-muted text-xs font-sans uppercase tracking-wider">{k}</span>
+								<div
+									key={k}
+									className="flex justify-between items-center py-2 border-b border-ark-border/40 last:border-0"
+								>
+									<span className="text-ark-muted text-xs font-sans uppercase tracking-wider">
+										{k}
+									</span>
 									<span className="font-mono text-sm text-ark-ivory">{v}</span>
 								</div>
 							))}
@@ -158,12 +202,18 @@ export default function RouterDashboard() {
 				</div>
 
 				{/* DNS */}
-				<div className="ark-card p-6 space-y-4 animate-slide-up" style={{ animationDelay: "0.1s" }}>
+				<div
+					className="ark-card p-6 space-y-4 animate-slide-up"
+					style={{ animationDelay: "0.1s" }}
+				>
 					<h2 className="font-serif text-xl text-ark-ivory">DNS</h2>
 					{!netLoading && netInfo?.dnsServers && (
 						<div className="flex flex-wrap gap-2">
 							{netInfo.dnsServers.map((s) => (
-								<span key={s} className="font-mono text-xs bg-ark-bg border border-ark-border rounded px-2 py-1 text-ark-ivory">
+								<span
+									key={s}
+									className="font-mono text-xs bg-ark-bg border border-ark-border rounded px-2 py-1 text-ark-ivory"
+								>
 									{s}
 								</span>
 							))}
@@ -178,7 +228,9 @@ export default function RouterDashboard() {
 					</button>
 					<div className="divider-gold" />
 					<div>
-						<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">Manual DNS (comma-separated)</label>
+						<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">
+							Manual DNS (comma-separated)
+						</label>
 						<div className="flex gap-2">
 							<input
 								type="text"
@@ -200,31 +252,55 @@ export default function RouterDashboard() {
 			</div>
 
 			{/* Connected Devices */}
-			<div className="ark-card p-6 space-y-4 animate-slide-up" style={{ animationDelay: "0.15s" }}>
+			<div
+				className="ark-card p-6 space-y-4 animate-slide-up"
+				style={{ animationDelay: "0.15s" }}
+			>
 				<h2 className="font-serif text-xl text-ark-ivory">
 					Connected Devices
-					{!devLoading && <span className="text-ark-muted text-base ml-2">({devices.length})</span>}
+					{!devLoading && (
+						<span className="text-ark-muted text-base ml-2">
+							({devices.length})
+						</span>
+					)}
 				</h2>
 				{devLoading ? (
 					<p className="text-ark-muted font-sans text-sm">Scanning…</p>
 				) : devices.length === 0 ? (
-					<p className="text-ark-muted font-sans text-sm text-center py-6">No devices found.</p>
+					<p className="text-ark-muted font-sans text-sm text-center py-6">
+						No devices found.
+					</p>
 				) : (
 					<div className="overflow-x-auto">
 						<table className="w-full text-sm font-sans">
 							<thead>
 								<tr className="border-b border-ark-border text-left">
-									<th className="pb-2 text-[10px] text-ark-muted uppercase tracking-widest font-normal pr-6">IP</th>
-									<th className="pb-2 text-[10px] text-ark-muted uppercase tracking-widest font-normal pr-6">MAC</th>
-									<th className="pb-2 text-[10px] text-ark-muted uppercase tracking-widest font-normal">Hostname</th>
+									<th className="pb-2 text-[10px] text-ark-muted uppercase tracking-widest font-normal pr-6">
+										IP
+									</th>
+									<th className="pb-2 text-[10px] text-ark-muted uppercase tracking-widest font-normal pr-6">
+										MAC
+									</th>
+									<th className="pb-2 text-[10px] text-ark-muted uppercase tracking-widest font-normal">
+										Hostname
+									</th>
 								</tr>
 							</thead>
 							<tbody>
 								{devices.map((d) => (
-									<tr key={d.mac} className="border-b border-ark-border/30 hover:bg-ark-bg/50 transition-colors">
-										<td className="py-2.5 pr-6 font-mono text-ark-gold">{d.ip}</td>
-										<td className="py-2.5 pr-6 font-mono text-ark-muted text-xs">{d.mac}</td>
-										<td className="py-2.5 text-ark-ivory">{d.hostname ?? "—"}</td>
+									<tr
+										key={d.mac}
+										className="border-b border-ark-border/30 hover:bg-ark-bg/50 transition-colors"
+									>
+										<td className="py-2.5 pr-6 font-mono text-ark-gold">
+											{d.ip}
+										</td>
+										<td className="py-2.5 pr-6 font-mono text-ark-muted text-xs">
+											{d.mac}
+										</td>
+										<td className="py-2.5 text-ark-ivory">
+											{d.hostname ?? "—"}
+										</td>
 									</tr>
 								))}
 							</tbody>
@@ -235,8 +311,13 @@ export default function RouterDashboard() {
 
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 				{/* Firewall Presets */}
-				<div className="ark-card p-6 space-y-4 animate-slide-up" style={{ animationDelay: "0.2s" }}>
-					<h2 className="font-serif text-xl text-ark-ivory">Quick Firewall Rules</h2>
+				<div
+					className="ark-card p-6 space-y-4 animate-slide-up"
+					style={{ animationDelay: "0.2s" }}
+				>
+					<h2 className="font-serif text-xl text-ark-ivory">
+						Quick Firewall Rules
+					</h2>
 					<div className="space-y-2">
 						{FIREWALL_PRESETS.map((preset) => (
 							<button
@@ -253,12 +334,17 @@ export default function RouterDashboard() {
 				</div>
 
 				{/* Port Forward */}
-				<div className="ark-card p-6 space-y-4 animate-slide-up" style={{ animationDelay: "0.25s" }}>
+				<div
+					className="ark-card p-6 space-y-4 animate-slide-up"
+					style={{ animationDelay: "0.25s" }}
+				>
 					<h2 className="font-serif text-xl text-ark-ivory">Port Forward</h2>
 					<div className="space-y-3">
 						<div className="grid grid-cols-2 gap-3">
 							<div>
-								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">Ext. Port</label>
+								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">
+									Ext. Port
+								</label>
 								<input
 									type="number"
 									value={pfExtPort}
@@ -268,7 +354,9 @@ export default function RouterDashboard() {
 								/>
 							</div>
 							<div>
-								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">Int. Port</label>
+								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">
+									Int. Port
+								</label>
 								<input
 									type="number"
 									value={pfIntPort}
@@ -279,7 +367,9 @@ export default function RouterDashboard() {
 							</div>
 						</div>
 						<div>
-							<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">Internal IP</label>
+							<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">
+								Internal IP
+							</label>
 							<input
 								type="text"
 								value={pfIntIp}
@@ -289,7 +379,9 @@ export default function RouterDashboard() {
 							/>
 						</div>
 						<div>
-							<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">Protocol</label>
+							<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">
+								Protocol
+							</label>
 							<select
 								value={pfProto}
 								onChange={(e) => setPfProto(e.target.value)}

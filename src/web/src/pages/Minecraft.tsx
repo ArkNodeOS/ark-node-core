@@ -16,7 +16,11 @@ interface MinecraftLogs {
 }
 
 export default function Minecraft() {
-	const { data: status, loading, refetch } = useApi<MinecraftStatus>("/minecraft/status");
+	const {
+		data: status,
+		loading,
+		refetch,
+	} = useApi<MinecraftStatus>("/minecraft/status");
 	const [actionLoading, setActionLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [logs, setLogs] = useState<string[]>([]);
@@ -39,7 +43,10 @@ export default function Minecraft() {
 					const d: MinecraftLogs = await res.json();
 					setLogs(d.lines ?? []);
 					setTimeout(() => {
-						logsRef.current?.scrollTo({ top: logsRef.current.scrollHeight, behavior: "smooth" });
+						logsRef.current?.scrollTo({
+							top: logsRef.current.scrollHeight,
+							behavior: "smooth",
+						});
 					}, 50);
 				}
 			} catch {}
@@ -53,7 +60,12 @@ export default function Minecraft() {
 		setActionLoading(true);
 		setError(null);
 		try {
-			await apiPost("/minecraft/start", { version, memory, gamemode, difficulty });
+			await apiPost("/minecraft/start", {
+				version,
+				memory,
+				gamemode,
+				difficulty,
+			});
 			await refetch();
 		} catch (e) {
 			setError(String(e));
@@ -80,8 +92,12 @@ export default function Minecraft() {
 		<div className="p-6 space-y-6 animate-fade-in">
 			{/* Header */}
 			<div>
-				<h1 className="font-serif text-3xl text-gold-gradient mb-1">Minecraft</h1>
-				<p className="text-ark-muted text-sm font-sans tracking-wide">Ludus · Server Control</p>
+				<h1 className="font-serif text-3xl text-gold-gradient mb-1">
+					Minecraft
+				</h1>
+				<p className="text-ark-muted text-sm font-sans tracking-wide">
+					Ludus · Server Control
+				</p>
 				<div className="divider-gold mt-3" />
 			</div>
 
@@ -96,7 +112,11 @@ export default function Minecraft() {
 				<div className="ark-card p-6 space-y-4 animate-slide-up">
 					<div className="flex items-center justify-between">
 						<h2 className="font-serif text-xl text-ark-ivory">Server Status</h2>
-						{loading && <span className="text-ark-muted text-xs font-sans">refreshing…</span>}
+						{loading && (
+							<span className="text-ark-muted text-xs font-sans">
+								refreshing…
+							</span>
+						)}
 					</div>
 
 					<div className="flex items-center gap-4">
@@ -110,11 +130,15 @@ export default function Minecraft() {
 							<span className="text-2xl">{status?.running ? "▶" : "■"}</span>
 						</div>
 						<div>
-							<div className={`font-serif text-2xl ${status?.running ? "text-green-400" : "text-ark-muted"}`}>
+							<div
+								className={`font-serif text-2xl ${status?.running ? "text-green-400" : "text-ark-muted"}`}
+							>
 								{loading ? "—" : status?.running ? "Running" : "Stopped"}
 							</div>
 							{status?.running && status.uptime && (
-								<div className="text-ark-muted text-xs font-sans mt-0.5">Up {status.uptime}</div>
+								<div className="text-ark-muted text-xs font-sans mt-0.5">
+									Up {status.uptime}
+								</div>
 							)}
 						</div>
 					</div>
@@ -127,9 +151,16 @@ export default function Minecraft() {
 								["Gamemode", status.gamemode ?? "—"],
 								["Difficulty", status.difficulty ?? "—"],
 							].map(([k, v]) => (
-								<div key={k} className="bg-ark-bg/50 rounded-ark px-3 py-2 border border-ark-border">
-									<div className="text-[10px] text-ark-muted font-sans uppercase tracking-widest">{k}</div>
-									<div className="text-ark-ivory font-sans text-sm capitalize">{v}</div>
+								<div
+									key={k}
+									className="bg-ark-bg/50 rounded-ark px-3 py-2 border border-ark-border"
+								>
+									<div className="text-[10px] text-ark-muted font-sans uppercase tracking-widest">
+										{k}
+									</div>
+									<div className="text-ark-ivory font-sans text-sm capitalize">
+										{v}
+									</div>
 								</div>
 							))}
 						</div>
@@ -157,13 +188,20 @@ export default function Minecraft() {
 				</div>
 
 				{/* Config Card */}
-				<div className="ark-card p-6 space-y-4 animate-slide-up" style={{ animationDelay: "0.1s" }}>
+				<div
+					className="ark-card p-6 space-y-4 animate-slide-up"
+					style={{ animationDelay: "0.1s" }}
+				>
 					<h2 className="font-serif text-xl text-ark-ivory">Configuration</h2>
-					<p className="text-ark-muted text-xs font-sans">Applied on next start</p>
+					<p className="text-ark-muted text-xs font-sans">
+						Applied on next start
+					</p>
 
 					<div className="space-y-3">
 						<div>
-							<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">Version</label>
+							<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">
+								Version
+							</label>
 							<input
 								type="text"
 								value={version}
@@ -173,38 +211,50 @@ export default function Minecraft() {
 							/>
 						</div>
 						<div>
-							<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">Memory</label>
+							<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">
+								Memory
+							</label>
 							<select
 								value={memory}
 								onChange={(e) => setMemory(e.target.value)}
 								className="w-full bg-ark-bg border border-ark-border rounded-ark px-3 py-2 text-ark-ivory font-sans text-sm focus:outline-none focus:border-ark-gold/50"
 							>
 								{["1G", "2G", "4G", "8G"].map((m) => (
-									<option key={m} value={m}>{m}</option>
+									<option key={m} value={m}>
+										{m}
+									</option>
 								))}
 							</select>
 						</div>
 						<div>
-							<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">Gamemode</label>
+							<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">
+								Gamemode
+							</label>
 							<select
 								value={gamemode}
 								onChange={(e) => setGamemode(e.target.value)}
 								className="w-full bg-ark-bg border border-ark-border rounded-ark px-3 py-2 text-ark-ivory font-sans text-sm focus:outline-none focus:border-ark-gold/50"
 							>
 								{["survival", "creative", "adventure"].map((m) => (
-									<option key={m} value={m} className="capitalize">{m}</option>
+									<option key={m} value={m} className="capitalize">
+										{m}
+									</option>
 								))}
 							</select>
 						</div>
 						<div>
-							<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">Difficulty</label>
+							<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">
+								Difficulty
+							</label>
 							<select
 								value={difficulty}
 								onChange={(e) => setDifficulty(e.target.value)}
 								className="w-full bg-ark-bg border border-ark-border rounded-ark px-3 py-2 text-ark-ivory font-sans text-sm focus:outline-none focus:border-ark-gold/50"
 							>
 								{["peaceful", "easy", "normal", "hard"].map((m) => (
-									<option key={m} value={m} className="capitalize">{m}</option>
+									<option key={m} value={m} className="capitalize">
+										{m}
+									</option>
 								))}
 							</select>
 						</div>
@@ -218,15 +268,22 @@ export default function Minecraft() {
 					<div className="flex items-center gap-3">
 						<span className="text-2xl">🌐</span>
 						<div>
-							<div className="text-[10px] text-ark-muted font-sans uppercase tracking-widest">Connect</div>
-							<div className="font-mono text-ark-gold text-lg">{status.ip}:25565</div>
+							<div className="text-[10px] text-ark-muted font-sans uppercase tracking-widest">
+								Connect
+							</div>
+							<div className="font-mono text-ark-gold text-lg">
+								{status.ip}:25565
+							</div>
 						</div>
 					</div>
 				</div>
 			)}
 
 			{/* Live Logs */}
-			<div className="ark-card p-5 space-y-3 animate-slide-up" style={{ animationDelay: "0.2s" }}>
+			<div
+				className="ark-card p-5 space-y-3 animate-slide-up"
+				style={{ animationDelay: "0.2s" }}
+			>
 				<div className="flex items-center justify-between">
 					<h2 className="font-serif text-xl text-ark-ivory">Live Logs</h2>
 					{status?.running && (
@@ -247,7 +304,10 @@ export default function Minecraft() {
 						</span>
 					) : (
 						logs.map((line, i) => (
-							<div key={i} className="leading-relaxed whitespace-pre-wrap break-all">
+							<div
+								key={i}
+								className="leading-relaxed whitespace-pre-wrap break-all"
+							>
 								{line}
 							</div>
 						))

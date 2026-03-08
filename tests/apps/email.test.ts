@@ -28,7 +28,9 @@ describe("email module — presets", () => {
 
 	it("includes Gmail preset with correct IMAP host", async () => {
 		const res = await app.inject({ method: "GET", url: "/email/presets" });
-		const { presets } = res.json() as { presets: { provider: string; host: string; port: number; tls: boolean }[] };
+		const { presets } = res.json() as {
+			presets: { provider: string; host: string; port: number; tls: boolean }[];
+		};
 		const gmail = presets.find((p) => p.provider === "gmail");
 		expect(gmail).toBeDefined();
 		expect(gmail!.host).toBe("imap.gmail.com");
@@ -105,7 +107,11 @@ describe("email module — account management", () => {
 			method: "POST",
 			url: "/email/accounts",
 			headers: { "content-type": "application/json" },
-			payload: JSON.stringify({ username: "a@b.com", password: "pass", provider: "gmail" }),
+			payload: JSON.stringify({
+				username: "a@b.com",
+				password: "pass",
+				provider: "gmail",
+			}),
 		});
 		expect(res.statusCode).toBe(400);
 		expect(res.json()).toHaveProperty("error");
@@ -116,7 +122,11 @@ describe("email module — account management", () => {
 			method: "POST",
 			url: "/email/accounts",
 			headers: { "content-type": "application/json" },
-			payload: JSON.stringify({ label: "No Pass", username: "a@b.com", provider: "gmail" }),
+			payload: JSON.stringify({
+				label: "No Pass",
+				username: "a@b.com",
+				provider: "gmail",
+			}),
 		});
 		expect(res.statusCode).toBe(400);
 	});
@@ -183,7 +193,10 @@ describe("email module — account management", () => {
 	});
 
 	it("DELETE /email/accounts/:id — 404 for nonexistent id", async () => {
-		const res = await app.inject({ method: "DELETE", url: "/email/accounts/nonexistent-id-xyz" });
+		const res = await app.inject({
+			method: "DELETE",
+			url: "/email/accounts/nonexistent-id-xyz",
+		});
 		expect(res.statusCode).toBe(404);
 	});
 });
@@ -191,7 +204,9 @@ describe("email module — account management", () => {
 describe("email module — manifest", () => {
 	it("is listed in /apps with network + storage permissions", async () => {
 		const res = await app.inject({ method: "GET", url: "/apps" });
-		const { apps } = res.json() as { apps: { name: string; permissions: string[] }[] };
+		const { apps } = res.json() as {
+			apps: { name: string; permissions: string[] }[];
+		};
 		const emailApp = apps.find((a) => a.name === "email");
 		expect(emailApp).toBeDefined();
 		expect(emailApp!.permissions).toContain("network");

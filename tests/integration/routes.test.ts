@@ -10,10 +10,20 @@ import { buildTestServer } from "../helpers/server.ts";
 (globalThis as any).fetch = async (url: string) => {
 	const u = url.toString();
 	if (u.includes("/api/tags")) {
-		return new Response(JSON.stringify({ models: [{ name: "llama3.2:latest" }] }), { status: 200 });
+		return new Response(
+			JSON.stringify({ models: [{ name: "llama3.2:latest" }] }),
+			{ status: 200 },
+		);
 	}
 	if (u.includes("/api/generate")) {
-		return new Response(JSON.stringify({ response: "mocked response", done: true, model: "llama3.2" }), { status: 200 });
+		return new Response(
+			JSON.stringify({
+				response: "mocked response",
+				done: true,
+				model: "llama3.2",
+			}),
+			{ status: 200 },
+		);
 	}
 	return new Response("{}", { status: 200 });
 };
@@ -96,7 +106,10 @@ describe("storage routes", () => {
 	});
 
 	it("GET /storage/:filename — retrieves the saved file", async () => {
-		const res = await app.inject({ method: "GET", url: `/storage/${filename}` });
+		const res = await app.inject({
+			method: "GET",
+			url: `/storage/${filename}`,
+		});
 		expect(res.statusCode).toBe(200);
 		expect(res.body).toBe("test content");
 	});
@@ -110,7 +123,10 @@ describe("storage routes", () => {
 	});
 
 	it("GET /storage/:filename — 404 for nonexistent file", async () => {
-		const res = await app.inject({ method: "GET", url: "/storage/no-such-file-xyz.txt" });
+		const res = await app.inject({
+			method: "GET",
+			url: "/storage/no-such-file-xyz.txt",
+		});
 		expect(res.statusCode).toBe(404);
 	});
 });

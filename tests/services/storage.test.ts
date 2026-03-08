@@ -1,11 +1,4 @@
-import { mkdir as fsMkdir, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "bun:test";
-
-// We test the storage logic directly by setting STORAGE_DIR via the module.
-// Since Bun caches modules, we re-implement the logic against a temp dir here.
-import { mkdtemp } from "node:fs/promises";
+import { describe, expect, it } from "bun:test";
 import {
 	getFile,
 	initStorage,

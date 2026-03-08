@@ -84,7 +84,10 @@ export default function VPNManager() {
 
 	const handleTogglePeer = async (peer: VPNPeer) => {
 		try {
-			await apiPost(`/vpn/peers/${peer.id}/${peer.enabled ? "disable" : "enable"}`, {});
+			await apiPost(
+				`/vpn/peers/${peer.id}/${peer.enabled ? "disable" : "enable"}`,
+				{},
+			);
 			await refetch();
 		} catch (e) {
 			setError(String(e));
@@ -109,7 +112,9 @@ export default function VPNManager() {
 			{/* Header */}
 			<div>
 				<h1 className="font-serif text-3xl text-gold-gradient mb-1">VPN</h1>
-				<p className="text-ark-muted text-sm font-sans tracking-wide">Tutela · WireGuard Peer Manager</p>
+				<p className="text-ark-muted text-sm font-sans tracking-wide">
+					Tutela · WireGuard Peer Manager
+				</p>
 				<div className="divider-gold mt-3" />
 			</div>
 
@@ -133,13 +138,19 @@ export default function VPNManager() {
 							<span className="text-xl">🔒</span>
 						</div>
 						<div>
-							<div className={`font-serif text-2xl ${status?.running ? "text-green-400" : "text-ark-muted"}`}>
+							<div
+								className={`font-serif text-2xl ${status?.running ? "text-green-400" : "text-ark-muted"}`}
+							>
 								{loading ? "—" : status?.running ? "Active" : "Stopped"}
 							</div>
 							{status?.running && (
 								<div className="flex gap-4 mt-1">
-									<span className="text-ark-muted text-xs font-sans">{status.peerCount} peers</span>
-									<span className="text-green-400 text-xs font-sans">{status.activePeers} connected</span>
+									<span className="text-ark-muted text-xs font-sans">
+										{status.peerCount} peers
+									</span>
+									<span className="text-green-400 text-xs font-sans">
+										{status.activePeers} connected
+									</span>
 								</div>
 							)}
 						</div>
@@ -160,10 +171,14 @@ export default function VPNManager() {
 				{/* Start form (only when stopped) */}
 				{!status?.running && (
 					<div className="mt-5 pt-5 border-t border-ark-border space-y-3">
-						<p className="text-ark-muted text-xs font-sans uppercase tracking-widest">Start VPN</p>
+						<p className="text-ark-muted text-xs font-sans uppercase tracking-widest">
+							Start VPN
+						</p>
 						<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 							<div>
-								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">Host / Interface</label>
+								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">
+									Host / Interface
+								</label>
 								<input
 									type="text"
 									value={host}
@@ -173,7 +188,9 @@ export default function VPNManager() {
 								/>
 							</div>
 							<div>
-								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">Password</label>
+								<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">
+									Password
+								</label>
 								<input
 									type="password"
 									value={password}
@@ -195,7 +212,10 @@ export default function VPNManager() {
 			</div>
 
 			{/* Peers */}
-			<div className="ark-card p-6 space-y-4 animate-slide-up" style={{ animationDelay: "0.1s" }}>
+			<div
+				className="ark-card p-6 space-y-4 animate-slide-up"
+				style={{ animationDelay: "0.1s" }}
+			>
 				<div className="flex items-center justify-between">
 					<h2 className="font-serif text-xl text-ark-ivory">Peers</h2>
 					<button
@@ -206,11 +226,13 @@ export default function VPNManager() {
 					</button>
 				</div>
 
-				{(!status?.peers || status.peers.length === 0) ? (
+				{!status?.peers || status.peers.length === 0 ? (
 					<div className="text-center py-10 text-ark-muted font-sans text-sm">
 						<div className="text-4xl mb-3">🔑</div>
 						<p>No peers configured.</p>
-						<p className="text-xs mt-1 opacity-60">Add a peer to get started.</p>
+						<p className="text-xs mt-1 opacity-60">
+							Add a peer to get started.
+						</p>
 					</div>
 				) : (
 					<div className="space-y-3">
@@ -218,24 +240,34 @@ export default function VPNManager() {
 							<div
 								key={peer.id}
 								className={`bg-ark-bg/50 border rounded-ark px-4 py-4 transition-all ${
-									peer.enabled ? "border-ark-border" : "border-ark-border/40 opacity-60"
+									peer.enabled
+										? "border-ark-border"
+										: "border-ark-border/40 opacity-60"
 								}`}
 							>
 								<div className="flex items-start justify-between flex-wrap gap-3">
 									<div className="flex items-center gap-3">
 										<div
 											className={`w-2.5 h-2.5 rounded-full shrink-0 mt-1 ${
-												peer.connected ? "bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.6)]" : "bg-ark-border"
+												peer.connected
+													? "bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.6)]"
+													: "bg-ark-border"
 											}`}
 										/>
 										<div>
-											<div className="font-serif text-ark-ivory">{peer.name}</div>
-											<div className="font-mono text-xs text-ark-muted mt-0.5">{peer.ip}</div>
+											<div className="font-serif text-ark-ivory">
+												{peer.name}
+											</div>
+											<div className="font-mono text-xs text-ark-muted mt-0.5">
+												{peer.ip}
+											</div>
 											{peer.connected && (
 												<div className="flex gap-3 mt-1 text-[10px] text-ark-muted font-sans">
 													<span>↓ {formatBytes(peer.rxBytes)}</span>
 													<span>↑ {formatBytes(peer.txBytes)}</span>
-													{peer.lastHandshake && <span>last {peer.lastHandshake}</span>}
+													{peer.lastHandshake && (
+														<span>last {peer.lastHandshake}</span>
+													)}
 												</div>
 											)}
 										</div>
@@ -286,19 +318,22 @@ export default function VPNManager() {
 			{showAddPeer && (
 				<div
 					className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
-					onClick={(e) => { if (e.target === e.currentTarget) setShowAddPeer(false); }}
+					onClick={(e) => {
+						if (e.target === e.currentTarget) setShowAddPeer(false);
+					}}
 				>
 					<div className="ark-card p-6 w-full max-w-sm space-y-4 animate-slide-up">
 						<h3 className="font-serif text-xl text-ark-ivory">New Peer</h3>
 						<div>
-							<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">Peer Name</label>
+							<label className="text-[10px] text-ark-muted font-sans uppercase tracking-widest block mb-1">
+								Peer Name
+							</label>
 							<input
 								type="text"
 								value={newPeerName}
 								onChange={(e) => setNewPeerName(e.target.value)}
 								onKeyDown={(e) => e.key === "Enter" && handleAddPeer()}
 								placeholder="e.g. phone, laptop"
-								autoFocus
 								className="w-full bg-ark-bg border border-ark-border rounded-ark px-3 py-2 text-ark-ivory font-sans text-sm focus:outline-none focus:border-ark-gold/50"
 							/>
 						</div>

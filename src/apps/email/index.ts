@@ -25,6 +25,7 @@ interface EmailAccount {
 	// password stored separately, never returned in API responses
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: used in account store (contains password)
 interface AccountWithPassword extends EmailAccount {
 	password: string;
 }

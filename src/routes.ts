@@ -6,7 +6,8 @@ import { interpretCommand } from "./services/solomon.ts";
 import { getFile, listFiles, saveFile } from "./services/storage.ts";
 
 // ---- Marketplace ----
-const REGISTRY_URL = "https://raw.githubusercontent.com/ArkNodeOS/ark-registry/main/registry.json";
+const REGISTRY_URL =
+	"https://raw.githubusercontent.com/ArkNodeOS/ark-registry/main/registry.json";
 
 // ---- Zod schemas ----
 const AIQuerySchema = z.object({
@@ -115,7 +116,9 @@ export function registerRoutes(app: FastifyInstance) {
 	// ---- Marketplace ----
 	app.get("/marketplace", async (_request, reply) => {
 		try {
-			const res = await fetch(REGISTRY_URL, { signal: AbortSignal.timeout(8000) });
+			const res = await fetch(REGISTRY_URL, {
+				signal: AbortSignal.timeout(8000),
+			});
 			if (!res.ok) throw new Error(`Registry returned ${res.status}`);
 			const registry = await res.json();
 			return registry;

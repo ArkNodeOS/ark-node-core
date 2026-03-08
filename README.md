@@ -1,90 +1,123 @@
-# Ark Node Core
+<div align="center">
 
-A personal sovereign server OS platform. Local AI, modular apps, unified inbox, ad blocking, game servers — all running privately in your home.
+# ✝ Ark Node Core
 
-> "Your data. Your intelligence. Your Ark."
+[![CI](https://github.com/ArkNodeOS/ark-node-core/actions/workflows/ci.yml/badge.svg)](https://github.com/ArkNodeOS/ark-node-core/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/ArkNodeOS/ark-node-core/branch/master/graph/badge.svg)](https://codecov.io/gh/ArkNodeOS/ark-node-core)
+[![Docker](https://ghcr-badge.egpl.dev/arknoedeos/ark-node-core/size)](https://github.com/ArkNodeOS/ark-node-core/pkgs/container/ark-node-core)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Bun](https://img.shields.io/badge/Bun-1.x-black?logo=bun)](https://bun.sh)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](https://www.typescriptlang.org)
+
+**Personal sovereign server platform.** Local AI, modular apps, unified inbox, ad blocking, game servers — all running privately in your home.
+
+*Arca Foederis — Your data. Your intelligence. Your Ark.*
+
+</div>
+
+---
 
 ## Quick Start
 
 ```bash
-# Run with Docker (recommended)
+# Docker (recommended — builds UI automatically)
 docker-compose up --build
+# → http://localhost:3000/ui/
 
-# Or run locally with Bun
+# Local dev
 bun install
+cd src/web && bun install && bun run build && cd ../..
 bun run dev
 ```
 
-Server starts at **http://localhost:3000** · Web UI at **http://localhost:3000/ui/** (after building)
+## What's Inside
 
-## Building the Web UI
+| Module | Routes | Description |
+|--------|--------|-------------|
+| 🌐 Router | `/router/*` | DNS, firewall, port forwarding, device discovery |
+| ✉️ Email | `/email/*` | Unified IMAP inbox (Gmail, Yahoo, Outlook…) |
+| ⛏️ Minecraft | `/minecraft/*` | One-click server via Docker |
+| 🛡️ AdBlock | `/adblock/*` | Pi-hole network ad blocking |
+| 📷 Photos | `/photos/*` | Media library with albums |
+| 🔒 VPN | `/vpn/*` | WireGuard via wg-easy, QR peer setup |
+| 💾 Backup | `/backup/*` | rsync jobs over SSH with scheduling |
+| 📱 Phone Backup | `/phone-backup/*` | WebDAV server — connect iOS/Android directly |
+| 🧠 Solomon | `/solomon` | Natural language → module routing |
+
+**Web UI:** Dashboard · Solomon AI chat · Apps · Files · dedicated page per module
+
+---
+
+## Development
+
+### Prerequisites
+
+- [Bun](https://bun.sh) ≥ 1.0
+- Docker (optional, for module testing)
+- Ollama (optional, for local AI)
+
+### Run Tests
+
+```bash
+bun test                  # 120 tests across 11 files
+bun test --coverage       # With line/function coverage report
+bun test --watch          # Watch mode
+```
+
+### Lint
+
+```bash
+bunx biome check .        # Check
+bunx biome check --fix .  # Auto-fix
+```
+
+### Build Web UI
 
 ```bash
 cd src/web
 bun install
 bun run build
-cd ../..
-# UI is now served at /ui/
+# dist/ is served at /ui/
 ```
 
-## API Reference
-
-### Platform
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/` | Welcome + version |
-| GET | `/health` | Health check |
-| GET | `/status` | CPU, memory, uptime |
-| GET | `/apps` | All loaded modules (full manifests) |
-
-### Storage
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/storage` | List files |
-| POST | `/storage/:filename` | Save a file |
-| GET | `/storage/:filename` | Retrieve a file |
-
-### AI (Solomon)
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/ai/health` | Is Ollama available? |
-| GET | `/ai/models` | List available models |
-| POST | `/ai/query` | `{ prompt, model?, context? }` → `{ response, model }` |
-
-### Minecraft Module
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/minecraft/status` | Container status + IP |
-| POST | `/minecraft/start` | Deploy/start server `{ version?, memory?, gamemode?, difficulty? }` |
-| POST | `/minecraft/stop` | Stop server |
-| DELETE | `/minecraft/destroy` | Remove container + data |
-| GET | `/minecraft/logs` | Tail logs `?lines=50` |
-
-### Email Module
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/email/presets` | Supported providers (Gmail, Yahoo, Outlook…) |
-| GET | `/email/accounts` | List configured accounts |
-| POST | `/email/accounts` | Add account `{ label, username, password, provider? }` |
-| DELETE | `/email/accounts/:id` | Remove account |
-| GET | `/email/inbox` | Unified inbox across all accounts |
-| GET | `/email/inbox/:id` | Single account inbox |
-
-### AdBlock Module (Pi-hole)
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/adblock/status` | Status + block stats |
-| POST | `/adblock/start` | Deploy Pi-hole `{ password?, timezone? }` |
-| POST | `/adblock/stop` | Stop Pi-hole |
-| GET | `/adblock/blocklist` | Top blocked domains |
-| POST | `/adblock/whitelist` | `{ domain }` |
-| POST | `/adblock/blacklist` | `{ domain }` |
-| POST | `/adblock/update-lists` | Pull latest blocklists |
+---
 
 ## Writing a Module
 
+Two styles supported — pick one:
+
+**Decorator style (recommended):**
 ```ts
 // src/apps/my-module/index.ts
+import "reflect-metadata";
+import { Module, Route, OnInit } from "../../decorators/index.ts";
+import type { ArkAPI } from "../../types/module.ts";
+
+@Module({
+  name: "my-module",
+  version: "1.0.0",
+  description: "Does something cool",
+  icon: "🚀",
+  permissions: ["storage"],
+})
+export default class MyModule {
+  declare _api: ArkAPI;
+
+  @OnInit()
+  async setup() {
+    this._api.log("Ready");
+  }
+
+  @Route("GET", "/hello")
+  async hello() {
+    return { message: "hi" };
+  }
+  // → GET /my-module/hello
+}
+```
+
+**Functional style:**
+```ts
 import type { ArkAPI, ArkManifest } from "../../types/module.ts";
 
 export const manifest: ArkManifest = {
@@ -92,70 +125,98 @@ export const manifest: ArkManifest = {
   version: "1.0.0",
   description: "Does something cool",
   icon: "🚀",
-  permissions: ["storage", "network"],
+  permissions: ["storage"],
 };
 
 export const run = (api: ArkAPI) => {
   api.registerRoute("GET", "/hello", async () => ({ message: "hi" }));
-  // Routes are automatically prefixed: GET /my-module/hello
-  // Storage is automatically scoped: storage/my-module/
+  // → GET /my-module/hello
 };
 ```
 
 Drop it in `src/apps/` — auto-discovered on startup.
 
-## Testing
+---
 
-```bash
-bun test                    # Run all tests
-bun test --watch            # Watch mode
-bun test --coverage         # With coverage report
-bun run test:services       # Unit tests only
-bun run test:apps           # Module tests only
-bun run test:integration    # Integration tests only
-```
+## CI / CD
 
-Tests use `bun:test` (built-in). Docker-dependent modules are tested with mocked `execSync`. No external services needed to run tests.
+| Check | Trigger | What runs |
+|-------|---------|-----------|
+| **Lint & Type Check** | PR + push | Biome + `tsc --noEmit` (server + web) |
+| **Tests & Coverage** | PR + push | `bun test --coverage` → Codecov |
+| **Build Web UI** | PR + push | Vite build + bundle size check (<500KB) |
+| **Docker Build** | PR + push | `docker buildx build` — pushes to GHCR on master |
+| **Smoke Test** | master push | Container start → `/health` + `/ui/` must 200 |
+| **Dev Container** | PR + push | Validates `.devcontainer/` builds clean |
+| **Security Scan** | master push | Trivy → GitHub Security tab |
+| **CodeQL** | PR + push + weekly | Static analysis for TypeScript |
+| **Release** | `v*` tag | Multi-arch Docker push (amd64+arm64) + GitHub Release |
 
-## Project Structure
+### Branches
+- `master` — stable, all CI required to merge
+- PRs — full CI runs, Docker build tested but not pushed
 
-```
-src/
-  index.ts              # Entry point
-  routes.ts             # Platform API routes
-  types/
-    module.ts           # ArkManifest + ArkAPI types
-  apps/
-    loader.ts           # Module auto-discovery (passes ArkAPI to each)
-    hello-world/        # Example module
-    minecraft/          # Minecraft server module
-    email/              # Email aggregator module
-    adblock/            # Pi-hole ad blocking module
-  services/
-    storage.ts          # File storage (scoped per module)
-    ai.ts               # Ollama AI integration
-  web/                  # React dashboard (Vite + Tailwind)
-    src/pages/          # Dashboard, AIChat, Apps, Files
-storage/                # Persistent data (Docker volume)
-tests/
-  services/             # Unit tests for services
-  apps/                 # Module route tests
-  integration/          # Full server integration tests
-  helpers/              # Shared test utilities
-```
+---
 
 ## Environment Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `OLLAMA_URL` | `http://localhost:11434` | Ollama API endpoint |
-| `OLLAMA_MODEL` | `llama3.2` | Default model |
+| `OLLAMA_MODEL` | `llama3.2` | Default model for Solomon |
+| `PORT` | `3000` | Server port |
+
+---
+
+## Project Structure
+
+```
+src/
+  index.ts              # Entry point + module loader
+  routes.ts             # Platform routes + marketplace API
+  types/module.ts       # ArkManifest + ArkAPI types
+  decorators/index.ts   # @Module @Route @OnInit
+  apps/
+    loader.ts           # Auto-discovery (class + functional)
+    hello-world/        # Reference module (decorator style)
+    minecraft/          # Minecraft server
+    email/              # IMAP email aggregator
+    adblock/            # Pi-hole ad blocking
+    photos/             # Media library
+    router/             # DNS + firewall + port forwarding
+    backup/             # rsync backup jobs
+    vpn/                # WireGuard VPN
+    phone-backup/       # WebDAV phone backup
+  services/
+    storage.ts          # Per-module file storage (path traversal safe)
+    ai.ts               # Ollama integration
+    solomon.ts          # NLP command router
+  web/                  # React 18 + Vite + Tailwind dashboard
+    src/pages/          # Sanctum · Solomon · Relics · Vault + module pages
+storage/                # Persistent data (Docker volume in prod)
+tests/
+  services/             # Storage + AI unit tests
+  apps/                 # Per-module route tests
+  integration/          # Full server integration tests
+  helpers/              # buildTestServer() + storage helpers
+.github/workflows/
+  ci.yml                # Main CI (lint, test, build, docker, security)
+  release.yml           # Release (multi-arch Docker + GitHub Release)
+  codeql.yml            # Weekly static analysis
+```
+
+---
+
+## Related Repos
+
+| Repo | Description |
+|------|-------------|
+| [ark-os](https://github.com/ArkNodeOS/ark-os) | Debian-based OS with one-line installer + A/B updates |
+| [ark-registry](https://github.com/ArkNodeOS/ark-registry) | Module marketplace registry |
+| [module-minecraft](https://github.com/ArkNodeOS/module-minecraft) · [module-email](https://github.com/ArkNodeOS/module-email) · [module-vpn](https://github.com/ArkNodeOS/module-vpn) · [module-router](https://github.com/ArkNodeOS/module-router) · [module-backup](https://github.com/ArkNodeOS/module-backup) · [module-adblock](https://github.com/ArkNodeOS/module-adblock) · [module-photos](https://github.com/ArkNodeOS/module-photos) | Standalone module packages |
+
+---
 
 ## Stack
 
-- **Runtime:** Bun
-- **API:** Fastify v5
-- **Linter:** Biome
-- **UI:** React + Vite + Tailwind
-- **Containers:** Docker
-- **AI:** Ollama (local) + cloud fallback (coming)
+**Runtime:** Bun · **API:** Fastify v5 · **Validation:** Zod v4 · **Linter:** Biome · **UI:** React 18 + Vite + Tailwind · **Containers:** Docker · **AI:** Ollama (local)
