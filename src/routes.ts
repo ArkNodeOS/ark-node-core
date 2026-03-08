@@ -112,6 +112,24 @@ export function registerRoutes(app: FastifyInstance) {
 		}
 	});
 
+	// ---- Marketplace ----
+	app.get("/marketplace", async (_request, reply) => {
+		try {
+			const res = await fetch(REGISTRY_URL, { signal: AbortSignal.timeout(8000) });
+			if (!res.ok) throw new Error(`Registry returned ${res.status}`);
+			const registry = await res.json();
+			return registry;
+		} catch (err) {
+			reply.code(503);
+			return { error: `Could not fetch registry: ${String(err)}` };
+		}
+	});
+
+	app.get("/marketplace/installed", async () => {
+		const installed = getLoadedModules().map((m) => m.name);
+		return { installed };
+	});
+
 	// ---- 404 ----
 	app.setNotFoundHandler(async (_request, reply) => {
 		reply.code(404);
