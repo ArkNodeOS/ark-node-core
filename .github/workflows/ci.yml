@@ -57,7 +57,7 @@ jobs:
         run: bun test --coverage --coverage-reporter=lcov --coverage-dir=coverage
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: coverage/lcov.info
           fail_ci_if_error: false
@@ -92,13 +92,13 @@ jobs:
         working-directory: src/web
         run: bun run build
 
-      - name: Check bundle size
+      - name: Check bundle size (JS < 600 KB raw)
         working-directory: src/web
         run: |
           JS_SIZE=$(du -sk dist/assets/*.js | awk '{sum+=$1} END {print sum}')
-          echo "JS bundle: ${JS_SIZE}KB"
+          echo "JS bundle: ${JS_SIZE} KB"
           if [ "$JS_SIZE" -gt 600 ]; then
-            echo "❌ JS bundle too large: ${JS_SIZE}KB (limit 600KB)"
+            echo "❌ JS bundle too large: ${JS_SIZE} KB (limit 600 KB)"
             exit 1
           fi
           echo "✅ Bundle size OK"
@@ -121,15 +121,16 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # GHCR requires lowercase owner
       - name: Set lowercase owner
-        run: echo "OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+        run: |
+          echo "OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
-      - name: Build image (PR — no push)
+      - name: Build only (pull request — no push)
         if: github.event_name == 'pull_request'
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: .devcontainer/Dockerfile
@@ -140,7 +141,7 @@ jobs:
 
       - name: Log in to GitHub Container Registry
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -148,7 +149,7 @@ jobs:
 
       - name: Build & push to GHCR (master)
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: .devcontainer/Dockerfile
@@ -162,16 +163,27 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Run container smoke test
+      - name: Smoke test — wait for server + check /health and /ui/
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         run: |
           CID=$(docker run -d -p 3000:3000 ghcr.io/${{ env.OWNER }}/ark-node-core:latest)
-          sleep 6
-          STATUS=$(curl -sf -o /dev/null -w "%{http_code}" http://localhost:3000/health || echo "000")
-          UI_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" http://localhost:3000/ui/ || echo "000")
-          docker stop $CID
-          echo "API /health: $STATUS | UI /ui/: $UI_STATUS"
-          [ "$STATUS" = "200" ] && [ "$UI_STATUS" = "200" ] && echo "✅ Smoke test passed" || (echo "❌ Smoke test failed"; exit 1)
+          echo "Container ID: $CID"
+
+          # Poll up to 30 s for server readiness
+          STATUS="000"
+          for i in $(seq 1 30); do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/health 2>/dev/null) || true
+            echo "  [${i}/30] /health → $CODE"
+            if [ "$CODE" = "200" ]; then STATUS="200"; break; fi
+            sleep 1
+          done
+
+          UI_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/ui/ 2>/dev/null) || true
+          docker stop "$CID"
+          echo "Result: API /health=$STATUS | UI /ui/=$UI_STATUS"
+          [ "$STATUS" = "200" ] && [ "$UI_STATUS" = "200" ] \
+            && echo "✅ Smoke test passed" \
+            || (echo "❌ Smoke test failed"; exit 1)
 
   # ── 5. Dev Container Build ────────────────────────────────────────────────
   devcontainer:
@@ -181,7 +193,8 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set lowercase owner
-        run: echo "OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+        run: |
+          echo "OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Build devcontainer
         uses: devcontainers/ci@v0.3
@@ -190,24 +203,26 @@ jobs:
           cacheFrom: ghcr.io/${{ env.OWNER }}/ark-node-core-devcontainer
           push: never
           runCmd: |
-            echo "Testing devcontainer..."
             bun --version
             echo "✅ Devcontainer OK"
 
-  # ── 6. Security Scan ─────────────────────────────────────────────────────
+  # ── 6. Container Security Scan ────────────────────────────────────────────
   security:
     name: Security Scan
     runs-on: ubuntu-latest
     needs: [docker]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    permissions:
+      security-events: write
     steps:
       - uses: actions/checkout@v4
 
       - name: Set lowercase owner
-        run: echo "OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+        run: |
+          echo "OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Run Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: ghcr.io/${{ env.OWNER }}/ark-node-core:latest
           format: sarif
@@ -215,13 +230,13 @@ jobs:
           severity: CRITICAL,HIGH
           ignore-unfixed: true
 
-      - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+      - name: Upload Trivy SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: trivy-results.sarif
 
-  # ── Summary gate ─────────────────────────────────────────────────────────
+  # ── Summary gate ──────────────────────────────────────────────────────────
   ci-pass:
     name: CI Passed
     runs-on: ubuntu-latest
@@ -230,9 +245,14 @@ jobs:
     steps:
       - name: Check all jobs passed
         run: |
-          if [[ "${{ needs.lint.result }}" != "success" ]]; then echo "❌ lint failed"; exit 1; fi
-          if [[ "${{ needs.test.result }}" != "success" ]]; then echo "❌ test failed"; exit 1; fi
-          if [[ "${{ needs.build-ui.result }}" != "success" ]]; then echo "❌ build-ui failed"; exit 1; fi
-          if [[ "${{ needs.docker.result }}" != "success" ]]; then echo "❌ docker failed"; exit 1; fi
-          if [[ "${{ needs.devcontainer.result }}" != "success" ]]; then echo "❌ devcontainer failed"; exit 1; fi
+          FAILED=""
+          [ "${{ needs.lint.result }}"        != "success" ] && FAILED="$FAILED lint"
+          [ "${{ needs.test.result }}"        != "success" ] && FAILED="$FAILED test"
+          [ "${{ needs.build-ui.result }}"    != "success" ] && FAILED="$FAILED build-ui"
+          [ "${{ needs.docker.result }}"      != "success" ] && FAILED="$FAILED docker"
+          [ "${{ needs.devcontainer.result }}" != "success" ] && FAILED="$FAILED devcontainer"
+          if [ -n "$FAILED" ]; then
+            echo "❌ Failed jobs:$FAILED"
+            exit 1
+          fi
           echo "✅ All CI checks passed"

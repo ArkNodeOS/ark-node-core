@@ -6,33 +6,47 @@ on:
   pull_request:
     branches: [master]
   schedule:
-    - cron: '0 6 * * 1'  # Weekly Monday 6am UTC
+    - cron: "0 6 * * 1" # Every Monday 06:00 UTC
 
 jobs:
   analyze:
-    name: Analyze (TypeScript)
+    name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-latest
     permissions:
       actions: read
       contents: read
       security-events: write
 
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript]
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
-          languages: javascript-typescript
-          queries: security-and-quality
+          languages: ${{ matrix.language }}
+          queries: security-extended,security-and-quality
 
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
-      - run: bun install --frozen-lockfile
+      - name: Install deps
+        run: bun install --frozen-lockfile
+
+      - name: Install web UI deps
+        working-directory: src/web
+        run: bun install --frozen-lockfile
+
+      - name: Build web UI (for CodeQL JS analysis)
+        working-directory: src/web
+        run: bun run build
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
-          category: /language:javascript-typescript
+          category: "/language:${{ matrix.language }}"
