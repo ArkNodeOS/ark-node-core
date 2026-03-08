@@ -29,8 +29,10 @@ export async function getOrCreateCerts(
 	console.log("🔐 Generating self-signed TLS certificate...");
 
 	const attrs = [{ name: "commonName", value: hostname }];
+	const notAfterDate = new Date();
+	notAfterDate.setFullYear(notAfterDate.getFullYear() + 10); // 10-year cert
 	const pems = (await selfsigned.generate(attrs, {
-		days: 3650,
+		notAfterDate,
 		algorithm: "sha256",
 		extensions: [
 			{

@@ -216,21 +216,23 @@ export async function executeAction(
 		const spec = ACTION_REGISTRY[command.module]?.[command.action];
 		if (spec) {
 			try {
-				const injected = await app.inject({
-					method: spec.method,
-					url: spec.path,
-					...(spec.body
-						? {
-								payload: spec.body(command.params),
-								headers: { "content-type": "application/json" },
-							}
-						: {}),
-				});
+				const injectOpts = spec.body
+					? {
+							method: spec.method,
+							url: spec.path,
+							payload: spec.body(command.params) as Record<string, unknown>,
+							headers: { "content-type": "application/json" } as Record<
+								string,
+								string
+							>,
+						}
+					: { method: spec.method, url: spec.path };
+				const injected = await app.inject(injectOpts);
 				return {
 					interpretation: command,
 					reply: aiReply,
 					executed: true,
-					result: injected.json() as unknown,
+					result: JSON.parse(injected.body) as unknown,
 				};
 			} catch (execErr) {
 				return {

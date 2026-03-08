@@ -4,8 +4,9 @@ describe("cert generation", () => {
 	it("generates key and cert pem strings", async () => {
 		const selfsigned = (await import("selfsigned")).default;
 		const attrs = [{ name: "commonName", value: "test-ark" }];
+		const notAfterDate = new Date(Date.now() + 86_400_000); // 1 day
 		const pems = (await selfsigned.generate(attrs, {
-			days: 1,
+			notAfterDate,
 			algorithm: "sha256",
 		})) as {
 			private: string;
