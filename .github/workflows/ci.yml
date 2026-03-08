@@ -169,16 +169,21 @@ jobs:
           CID=$(docker run -d -p 3000:3000 ghcr.io/${{ env.OWNER }}/ark-node-core:latest)
           echo "Container ID: $CID"
 
-          # Poll up to 30 s for server readiness
+          # Poll up to 45 s for server readiness
           STATUS="000"
-          for i in $(seq 1 30); do
+          for i in $(seq 1 45); do
             CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/health 2>/dev/null) || true
-            echo "  [${i}/30] /health → $CODE"
+            echo "  [${i}/45] /health → $CODE"
             if [ "$CODE" = "200" ]; then STATUS="200"; break; fi
             sleep 1
           done
 
           UI_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/ui/ 2>/dev/null) || true
+
+          echo "--- Container logs ---"
+          docker logs "$CID" 2>&1 | tail -40
+          echo "--- End logs ---"
+
           docker stop "$CID"
           echo "Result: API /health=$STATUS | UI /ui/=$UI_STATUS"
           [ "$STATUS" = "200" ] && [ "$UI_STATUS" = "200" ] \
