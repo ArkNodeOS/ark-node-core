@@ -1,0 +1,10 @@
+node_modules
+src/web/node_modules
+src/web/dist
+storage
+.git
+.gitignore
+tests
+*.md
+coverage
+*.lcov

@@ -1,15 +1,28 @@
 version: "3.9"
 
 services:
-  ark-node-core:
+  ark-node:
     build:
       context: .
       dockerfile: .devcontainer/Dockerfile
-    container_name: ark-node-core
+    container_name: ark-node
     ports:
-      - "3000:3000"
+      - "3000:3000"       # Main server + Web UI
+      - "25565:25565"     # Minecraft (if module active)
+      - "8080:8080"       # Pi-hole web UI (if adblock active)
+      - "51820:51820/udp" # WireGuard VPN
+      - "51821:51821"     # wg-easy web UI
     volumes:
-      - .:/workspace
-      - ./storage:/workspace/storage
+      - ark-storage:/workspace/storage
     working_dir: /workspace
+    environment:
+      - OLLAMA_URL=${OLLAMA_URL:-http://host.docker.internal:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
     command: bun run dev
+
+volumes:
+  ark-storage:
+    name: ark-storage
