@@ -1,11 +1,9 @@
 import type { FastifyInstance } from "fastify";
+import { getLoadedModules } from "./apps/loader.ts";
+import { isOllamaAvailable, listModels, queryAI } from "./services/ai.ts";
 import { getFile, listFiles, saveFile } from "./services/storage.ts";
 
-interface LoadedApp {
-	name: string;
-}
-
-export function registerRoutes(app: FastifyInstance, loadedApps: LoadedApp[]) {
+export function registerRoutes(app: FastifyInstance) {
 	app.addContentTypeParser(
 		["text/plain", "application/octet-stream"],
 		{ parseAs: "buffer" },
@@ -14,25 +12,28 @@ export function registerRoutes(app: FastifyInstance, loadedApps: LoadedApp[]) {
 		},
 	);
 
-	app.get("/", async () => {
-		return { message: "Welcome to Ark Node", version: "0.1.0" };
-	});
+	// Platform
+	app.get("/", async () => ({
+		message: "Welcome to Ark Node",
+		version: "0.2.0",
+	}));
 
-	app.get("/apps", async () => {
-		return { apps: loadedApps };
-	});
+	app.get("/apps", async () => ({
+		apps: getLoadedModules(),
+	}));
 
-	app.get("/storage", async () => {
-		const files = await listFiles();
-		return { files };
-	});
+	// Storage
+	app.get("/storage", async () => ({
+		files: await listFiles(),
+	}));
 
 	app.post<{ Params: { filename: string } }>(
 		"/storage/:filename",
 		async (request, reply) => {
-			const { filename } = request.params;
-			const body = request.body;
-			const saved = await saveFile(filename, body as string | Buffer);
+			const saved = await saveFile(
+				request.params.filename,
+				request.body as string | Buffer,
+			);
 			reply.code(201);
 			return { saved };
 		},
@@ -41,14 +42,41 @@ export function registerRoutes(app: FastifyInstance, loadedApps: LoadedApp[]) {
 	app.get<{ Params: { filename: string } }>(
 		"/storage/:filename",
 		async (request, reply) => {
-			const { filename } = request.params;
 			try {
-				const data = await getFile(filename);
+				const data = await getFile(request.params.filename);
 				reply.type("application/octet-stream");
 				return data;
 			} catch {
 				reply.code(404);
 				return { error: "File not found" };
+			}
+		},
+	);
+
+	// AI
+	app.get("/ai/health", async () => ({
+		available: await isOllamaAvailable(),
+		url: process.env.OLLAMA_URL ?? "http://localhost:11434",
+	}));
+
+	app.get("/ai/models", async () => ({
+		models: await listModels(),
+	}));
+
+	app.post<{ Body: { prompt: string; model?: string; context?: string } }>(
+		"/ai/query",
+		async (request, reply) => {
+			const { prompt, model, context } = request.body;
+			if (!prompt) {
+				reply.code(400);
+				return { error: "prompt is required" };
+			}
+			try {
+				const response = await queryAI(prompt, model, context);
+				return { response, model: model ?? process.env.OLLAMA_MODEL ?? "llama3.2" };
+			} catch (err) {
+				reply.code(503);
+				return { error: String(err) };
 			}
 		},
 	);

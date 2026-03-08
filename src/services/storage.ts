@@ -1,35 +1,56 @@
-import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import {
+	mkdir as fsMkdir,
+	readdir,
+	readFile,
+	writeFile,
+} from "node:fs/promises";
 import { join, resolve } from "node:path";
 
 const STORAGE_DIR = resolve(import.meta.dirname, "../../storage");
 
-function sanitizeFilename(filename: string): string {
-	const sanitized = filename.replace(/[/\\]/g, "").replace(/\.\./g, "");
-	if (!sanitized || sanitized === "." || sanitized === ".gitkeep") {
-		throw new Error(`Invalid filename: "${filename}"`);
+function sanitizePath(filePath: string): string {
+	const normalized = filePath.replace(/\.\./g, "").replace(/^\/+/, "");
+	if (!normalized || normalized === ".gitkeep") {
+		throw new Error(`Invalid path: "${filePath}"`);
 	}
-	return sanitized;
+	return normalized;
 }
 
 export async function initStorage(): Promise<void> {
-	await mkdir(STORAGE_DIR, { recursive: true });
+	await fsMkdir(STORAGE_DIR, { recursive: true });
+}
+
+export async function initModuleStorage(moduleName: string): Promise<void> {
+	await fsMkdir(join(STORAGE_DIR, moduleName), { recursive: true });
+}
+
+export async function mkdir(dir: string): Promise<void> {
+	const safe = sanitizePath(dir);
+	await fsMkdir(join(STORAGE_DIR, safe), { recursive: true });
 }
 
 export async function saveFile(
-	filename: string,
+	filePath: string,
 	data: string | Buffer,
 ): Promise<string> {
-	const safe = sanitizeFilename(filename);
-	await writeFile(join(STORAGE_DIR, safe), data);
+	const safe = sanitizePath(filePath);
+	const full = join(STORAGE_DIR, safe);
+	await fsMkdir(resolve(full, ".."), { recursive: true });
+	await writeFile(full, data);
 	return safe;
 }
 
-export async function getFile(filename: string): Promise<Buffer> {
-	const safe = sanitizeFilename(filename);
+export async function getFile(filePath: string): Promise<Buffer> {
+	const safe = sanitizePath(filePath);
 	return readFile(join(STORAGE_DIR, safe));
 }
 
-export async function listFiles(): Promise<string[]> {
-	const entries = await readdir(STORAGE_DIR);
-	return entries.filter((e) => e !== ".gitkeep");
+export async function listFiles(dir?: string): Promise<string[]> {
+	const target = dir ? join(STORAGE_DIR, sanitizePath(dir)) : STORAGE_DIR;
+	try {
+		const entries = await readdir(target);
+		return entries.filter((e) => e !== ".gitkeep");
+	} catch {
+		return [];
+	}
 }
