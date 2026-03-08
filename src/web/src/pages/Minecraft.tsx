@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Icon } from "../components/Icons.tsx";
 import { apiPost, useApi } from "../hooks/useApi.ts";
 
 interface MinecraftStatus {
@@ -266,7 +267,7 @@ export default function Minecraft() {
 			{status?.running && status.ip && (
 				<div className="ark-card p-5 border-ark-gold/20 animate-slide-up">
 					<div className="flex items-center gap-3">
-						<span className="text-2xl">🌐</span>
+						<Icon name="globe" className="w-6 h-6" />
 						<div>
 							<div className="text-[10px] text-ark-muted font-sans uppercase tracking-widest">
 								Connect

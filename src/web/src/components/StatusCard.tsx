@@ -1,8 +1,10 @@
+import { Icon, type IconName } from "./Icons.tsx";
+
 interface StatusCardProps {
 	label: string;
 	value: string;
 	sub?: string;
-	icon: string;
+	icon: IconName;
 	glow?: boolean;
 }
 
@@ -22,7 +24,7 @@ export default function StatusCard({
 
 			<div className="relative">
 				<div className="flex items-start justify-between mb-4">
-					<span className="text-xl text-ark-gold/80">{icon}</span>
+					<Icon name={icon} className="w-5 h-5 text-ark-gold/80" />
 					{glow && (
 						<span className="w-1.5 h-1.5 rounded-full bg-ark-gold animate-pulse-gold" />
 					)}

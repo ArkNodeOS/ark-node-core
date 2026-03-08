@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Icon } from "../components/Icons.tsx";
 import { apiPost, useApi } from "../hooks/useApi.ts";
 
 interface EmailAccount {
@@ -150,7 +151,7 @@ export default function EmailInbox() {
 								}`}
 							>
 								<div className="flex items-center gap-2">
-									<span className="text-base">✉</span>
+									<Icon name="envelope" className="w-4 h-4" />
 									<span className="font-sans text-sm">All Accounts</span>
 								</div>
 								{allMessages.length > 0 && (
@@ -221,7 +222,10 @@ export default function EmailInbox() {
 						</div>
 					) : messages.length === 0 ? (
 						<div className="text-center py-16 space-y-3 animate-fade-in">
-							<div className="text-6xl opacity-40">✉</div>
+							<Icon
+								name="envelope"
+								className="w-16 h-16 text-ark-gold/40 mx-auto"
+							/>
 							<p className="font-serif text-2xl text-ark-ivory">
 								Omnia Silentia
 							</p>

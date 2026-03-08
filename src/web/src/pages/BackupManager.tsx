@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Icon } from "../components/Icons.tsx";
 import { apiPost, useApi } from "../hooks/useApi.ts";
 
 interface BackupJob {
@@ -157,7 +158,7 @@ export default function BackupManager() {
 				</div>
 			) : jobs.length === 0 ? (
 				<div className="ark-card p-10 text-center space-y-2">
-					<div className="text-5xl">💾</div>
+					<Icon name="archive" className="w-12 h-12 text-ark-gold/40" />
 					<p className="font-serif text-xl text-ark-ivory">No backup jobs</p>
 					<p className="text-ark-muted text-sm font-sans">
 						Create your first job to protect your data.

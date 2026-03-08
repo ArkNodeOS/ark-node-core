@@ -1,3 +1,4 @@
+import { Icon } from "../components/Icons.tsx";
 import { useApi } from "../hooks/useApi.ts";
 
 interface AppManifest {
@@ -56,7 +57,10 @@ export default function Apps() {
 					<div className="space-y-3 mb-10">
 						{data.apps.length === 0 ? (
 							<div className="text-center py-20 text-ark-dim">
-								<div className="text-4xl mb-4 text-ark-gold/30">❧</div>
+								<Icon
+									name="star4"
+									className="w-10 h-10 text-ark-gold/30 mb-4"
+								/>
 								<p className="font-serif text-xl">No modules installed</p>
 							</div>
 						) : (
@@ -67,7 +71,7 @@ export default function Apps() {
 								>
 									<div className="flex items-start gap-5">
 										<div className="w-12 h-12 rounded-ark bg-ark-raised border border-ark-border flex items-center justify-center text-2xl shrink-0 group-hover:border-ark-gold/30 transition-colors">
-											{app.icon ?? "❧"}
+											<Icon name="star4" className="w-6 h-6 text-ark-gold/60" />
 										</div>
 										<div className="flex-1 min-w-0">
 											<div className="flex items-center gap-3 flex-wrap mb-1">
@@ -111,7 +115,7 @@ export default function Apps() {
 
 					{/* Marketplace */}
 					<div className="ark-card p-8 text-center border-dashed">
-						<div className="text-3xl mb-3 text-ark-gold/30">✦</div>
+						<Icon name="star4" className="w-8 h-8 text-ark-gold/30 mb-3" />
 						<h3 className="font-serif text-xl text-ark-ivory mb-2">
 							Module Marketplace
 						</h3>

@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useState } from "react";
 import type { Page } from "../App.tsx";
+import { Icon, type IconName } from "./Icons.tsx";
 
 interface LayoutProps {
 	page: Page;
@@ -10,31 +11,31 @@ interface LayoutProps {
 interface NavItem {
 	id: Page;
 	label: string;
-	icon: string;
+	icon: IconName;
 	latinLabel: string;
 }
 
 // Primary nav for mobile bottom bar (5 items)
 const MOBILE_NAV: NavItem[] = [
-	{ id: "dashboard", label: "Home", icon: "⚓", latinLabel: "Sanctum" },
-	{ id: "ai", label: "Solomon", icon: "👁️", latinLabel: "Sapientia" },
-	{ id: "apps", label: "Apps", icon: "✦", latinLabel: "Relics" },
-	{ id: "files", label: "Files", icon: "◈", latinLabel: "Vault" },
-	{ id: "settings", label: "Settings", icon: "⚙️", latinLabel: "Regula" },
+	{ id: "dashboard", label: "Home", icon: "anchor", latinLabel: "Sanctum" },
+	{ id: "ai", label: "Solomon", icon: "eye", latinLabel: "Sapientia" },
+	{ id: "apps", label: "Apps", icon: "star4", latinLabel: "Relics" },
+	{ id: "files", label: "Files", icon: "diamond", latinLabel: "Vault" },
+	{ id: "settings", label: "Settings", icon: "gear", latinLabel: "Regula" },
 ];
 
-// Full nav for desktop sidebar
+// Full nav for desktop/tablet sidebar
 const ALL_NAV: NavItem[] = [
-	{ id: "dashboard", label: "Sanctum", icon: "⚓", latinLabel: "Domus" },
-	{ id: "ai", label: "Solomon", icon: "👁️", latinLabel: "Sapientia" },
-	{ id: "apps", label: "Relics", icon: "✦", latinLabel: "Moduli" },
-	{ id: "files", label: "Vault", icon: "◈", latinLabel: "Archivum" },
-	{ id: "minecraft", label: "Minecraft", icon: "⛏", latinLabel: "Ludus" },
-	{ id: "vpn", label: "VPN", icon: "🔒", latinLabel: "Tutela" },
-	{ id: "backup", label: "Backup", icon: "💾", latinLabel: "Custodia" },
-	{ id: "router", label: "Router", icon: "🌐", latinLabel: "Retis" },
-	{ id: "email", label: "Epistulae", icon: "✉", latinLabel: "Nuntius" },
-	{ id: "settings", label: "Settings", icon: "⚙️", latinLabel: "Regula" },
+	{ id: "dashboard", label: "Sanctum", icon: "anchor", latinLabel: "Domus" },
+	{ id: "ai", label: "Solomon", icon: "eye", latinLabel: "Sapientia" },
+	{ id: "apps", label: "Relics", icon: "star4", latinLabel: "Moduli" },
+	{ id: "files", label: "Vault", icon: "diamond", latinLabel: "Archivum" },
+	{ id: "minecraft", label: "Minecraft", icon: "pickaxe", latinLabel: "Ludus" },
+	{ id: "vpn", label: "VPN", icon: "shield", latinLabel: "Tutela" },
+	{ id: "backup", label: "Backup", icon: "archive", latinLabel: "Custodia" },
+	{ id: "router", label: "Router", icon: "globe", latinLabel: "Retis" },
+	{ id: "email", label: "Epistulae", icon: "envelope", latinLabel: "Nuntius" },
+	{ id: "settings", label: "Settings", icon: "gear", latinLabel: "Regula" },
 ];
 
 function useBreakpoint() {
@@ -63,7 +64,7 @@ export default function Layout({ page, onNavigate, children }: LayoutProps) {
 					<span className="font-serif text-xl text-[#C9A84C] tracking-widest">
 						ARK NODE
 					</span>
-					<span className="text-xl">⚓</span>
+					<Icon name="anchor" className="w-5 h-5 text-[#C9A84C]" />
 				</header>
 
 				<main className="flex-1 overflow-y-auto pb-24">{children}</main>
@@ -78,11 +79,11 @@ export default function Layout({ page, onNavigate, children }: LayoutProps) {
 								key={item.id}
 								type="button"
 								onClick={() => onNavigate(item.id)}
-								className={`flex-1 flex flex-col items-center py-2 gap-0.5 transition-colors min-h-[52px] justify-center ${
+								className={`flex-1 flex flex-col items-center py-2 gap-1 transition-colors min-h-[52px] justify-center ${
 									page === item.id ? "text-[#C9A84C]" : "text-[#6A5A3A]"
 								}`}
 							>
-								<span className="text-xl leading-none">{item.icon}</span>
+								<Icon name={item.icon} className="w-5 h-5" />
 								<span className="text-[10px] tracking-wider uppercase">
 									{item.label}
 								</span>
@@ -99,20 +100,20 @@ export default function Layout({ page, onNavigate, children }: LayoutProps) {
 		return (
 			<div className="flex min-h-screen bg-[#060402] text-[#F5F0E0]">
 				<aside className="w-16 flex flex-col items-center py-6 gap-2 bg-[#0C0804] border-r border-[#3A2A10] sticky top-0 h-screen overflow-y-auto">
-					<span className="text-[#C9A84C] text-2xl mb-4">⚓</span>
+					<Icon name="anchor" className="w-6 h-6 text-[#C9A84C] mb-4" />
 					{ALL_NAV.map((item) => (
 						<button
 							key={item.id}
 							type="button"
 							onClick={() => onNavigate(item.id)}
 							title={item.latinLabel}
-							className={`w-10 h-10 flex items-center justify-center rounded-lg text-xl transition-colors ${
+							className={`w-10 h-10 flex items-center justify-center rounded-lg transition-colors ${
 								page === item.id
 									? "bg-[#C9A84C]/15 text-[#C9A84C]"
 									: "text-[#6A5A3A] hover:text-[#9A8A6A] hover:bg-[#221608]"
 							}`}
 						>
-							{item.icon}
+							<Icon name={item.icon} className="w-5 h-5" />
 						</button>
 					))}
 				</aside>
@@ -144,9 +145,7 @@ export default function Layout({ page, onNavigate, children }: LayoutProps) {
 								: "text-[#9A8A6A] hover:text-[#F5F0E0] hover:bg-[#221608] border border-transparent"
 						}`}
 					>
-						<span className="text-base w-5 text-center shrink-0">
-							{item.icon}
-						</span>
+						<Icon name={item.icon} className="w-4 h-4 shrink-0" />
 						<div className="flex-1 min-w-0">
 							<div className="text-xs tracking-widest uppercase font-sans">
 								{item.label}

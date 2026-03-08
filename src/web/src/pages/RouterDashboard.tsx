@@ -224,7 +224,7 @@ export default function RouterDashboard() {
 						disabled={dnsLoading}
 						className="btn-gold w-full disabled:opacity-50"
 					>
-						{dnsLoading ? "Applying…" : "✝ Use Ark DNS"}
+						{dnsLoading ? "Applying…" : "Use Ark DNS"}
 					</button>
 					<div className="divider-gold" />
 					<div>

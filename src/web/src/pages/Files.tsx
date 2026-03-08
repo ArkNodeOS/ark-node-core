@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { Icon } from "../components/Icons.tsx";
 import { useApi } from "../hooks/useApi.ts";
 
 const BASE = import.meta.env.DEV ? "/api" : "";
@@ -29,15 +30,22 @@ export default function Files() {
 		for (const f of Array.from(e.dataTransfer.files)) uploadFile(f);
 	}
 
-	function fileIcon(name: string) {
+	function fileIconName(
+		name: string,
+	): "camera" | "diamond" | "archive" | "circle-ring" | "circle-dot" {
 		const ext = name.split(".").pop()?.toLowerCase();
 		if (["jpg", "jpeg", "png", "gif", "webp", "heic"].includes(ext ?? ""))
-			return "◈";
-		if (["mp4", "mov", "mkv", "avi"].includes(ext ?? "")) return "▷";
-		if (["mp3", "m4a", "flac", "wav"].includes(ext ?? "")) return "♫";
-		if (["pdf", "doc", "docx", "txt", "md"].includes(ext ?? "")) return "❧";
-		if (["zip", "tar", "gz", "7z"].includes(ext ?? "")) return "⊠";
-		return "◉";
+			return "camera";
+		if (
+			["mp4", "mov", "mkv", "avi", "mp3", "m4a", "flac", "wav"].includes(
+				ext ?? "",
+			)
+		)
+			return "diamond";
+		if (["pdf", "doc", "docx", "txt", "md"].includes(ext ?? ""))
+			return "circle-ring";
+		if (["zip", "tar", "gz", "7z"].includes(ext ?? "")) return "archive";
+		return "circle-dot";
 	}
 
 	return (
@@ -77,9 +85,10 @@ export default function Files() {
                       hover:border-ark-gold/30 hover:shadow-gold-subtle
                       transition-all duration-300 group"
 			>
-				<span className="text-3xl text-ark-gold/30 group-hover:text-ark-gold/60 block mb-3 transition-colors">
-					◈
-				</span>
+				<Icon
+					name="diamond"
+					className="w-8 h-8 text-ark-gold/30 group-hover:text-ark-gold/60 mb-3 transition-colors"
+				/>
 				<p className="text-sm text-ark-muted font-sans">
 					Drop files here or click to upload
 				</p>
@@ -127,9 +136,10 @@ export default function Files() {
                                 hover:border-ark-gold/30 hover:shadow-gold-subtle
                                 transition-all duration-200 group"
 								>
-									<span className="text-lg text-ark-gold/50 group-hover:text-ark-gold/80 transition-colors w-5 text-center">
-										{fileIcon(file)}
-									</span>
+									<Icon
+										name={fileIconName(file)}
+										className="w-4 h-4 text-ark-gold/50 group-hover:text-ark-gold/80 transition-colors shrink-0"
+									/>
 									<span className="flex-1 text-sm font-sans text-ark-parchment truncate">
 										{file}
 									</span>

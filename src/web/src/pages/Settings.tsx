@@ -1,3 +1,5 @@
+import { Icon } from "../components/Icons.tsx";
+
 export default function Settings() {
 	return (
 		<div className="relative p-4 py-4 md:p-6 md:py-8 max-w-4xl mx-auto animate-slide-up">
@@ -16,7 +18,7 @@ export default function Settings() {
 				{/* Node Info */}
 				<div className="bg-[#1A1108] border border-[#3A2A10] rounded-lg p-6">
 					<div className="flex items-center gap-3 mb-4">
-						<span className="text-[#C9A84C] text-xl">⚓</span>
+						<Icon name="anchor" className="w-5 h-5 text-[#C9A84C]" />
 						<div>
 							<div className="font-serif text-lg text-[#F5F0E0]">
 								Node Identity
@@ -35,7 +37,7 @@ export default function Settings() {
 				{/* Theme */}
 				<div className="bg-[#1A1108] border border-[#3A2A10] rounded-lg p-6">
 					<div className="flex items-center gap-3 mb-4">
-						<span className="text-[#C9A84C] text-xl">✦</span>
+						<Icon name="star4" className="w-5 h-5 text-[#C9A84C]" />
 						<div>
 							<div className="font-serif text-lg text-[#F5F0E0]">
 								Appearance
@@ -53,7 +55,7 @@ export default function Settings() {
 				{/* PWA Install */}
 				<div className="bg-[#1A1108] border border-[#3A2A10] rounded-lg p-6">
 					<div className="flex items-center gap-3 mb-4">
-						<span className="text-[#C9A84C] text-xl">📱</span>
+						<Icon name="phone" className="w-5 h-5 text-[#C9A84C]" />
 						<div>
 							<div className="font-serif text-lg text-[#F5F0E0]">
 								Install as App
@@ -72,7 +74,7 @@ export default function Settings() {
 				{/* About */}
 				<div className="bg-[#1A1108] border border-[#3A2A10] rounded-lg p-6">
 					<div className="flex items-center gap-3 mb-4">
-						<span className="text-[#C9A84C] text-xl">◉</span>
+						<Icon name="circle-ring" className="w-5 h-5 text-[#C9A84C]" />
 						<div>
 							<div className="font-serif text-lg text-[#F5F0E0]">About</div>
 							<div className="text-[10px] text-[#6A5A3A] tracking-widest uppercase">

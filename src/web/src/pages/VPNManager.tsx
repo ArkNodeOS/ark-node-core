@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Icon } from "../components/Icons.tsx";
 import { apiPost, useApi } from "../hooks/useApi.ts";
 
 interface VPNPeer {
@@ -135,7 +136,7 @@ export default function VPNManager() {
 									: "border-ark-border bg-ark-card"
 							}`}
 						>
-							<span className="text-xl">🔒</span>
+							<Icon name="lock" className="w-5 h-5" />
 						</div>
 						<div>
 							<div

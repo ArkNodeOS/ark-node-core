@@ -1,4 +1,5 @@
 import type { Page } from "../App.tsx";
+import { CrossWatermark, Icon } from "../components/Icons.tsx";
 import StatusCard from "../components/StatusCard.tsx";
 import { useApi } from "../hooks/useApi.ts";
 
@@ -37,28 +38,28 @@ const ACTIONS: {
 	id: Page;
 	label: string;
 	latin: string;
-	icon: string;
+	icon: "eye" | "star4" | "diamond";
 	desc: string;
 }[] = [
 	{
 		id: "ai",
 		label: "Solomon",
 		latin: "Sapientia",
-		icon: "✝",
+		icon: "eye",
 		desc: "Ask your private AI anything",
 	},
 	{
 		id: "apps",
 		label: "Relics",
 		latin: "Moduli",
-		icon: "❧",
+		icon: "star4",
 		desc: "Installed modules & extensions",
 	},
 	{
 		id: "files",
 		label: "Vault",
 		latin: "Archivum",
-		icon: "◈",
+		icon: "diamond",
 		desc: "Your sovereign file storage",
 	},
 ];
@@ -73,11 +74,9 @@ export default function Dashboard({
 
 	return (
 		<div className="relative min-h-full px-4 py-4 md:px-8 md:py-10 max-w-5xl mx-auto">
-			{/* Cross watermark */}
+			{/* Cross watermark — SVG so it renders identically on all platforms */}
 			<div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
-				<span className="text-[400px] md:text-[600px] font-serif text-ark-gold/[0.015] leading-none">
-					✝
-				</span>
+				<CrossWatermark className="w-[400px] md:w-[600px] text-ark-gold/[0.015]" />
 			</div>
 
 			<div className="relative animate-slide-up">
@@ -98,18 +97,18 @@ export default function Dashboard({
 				{/* Status row */}
 				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-8 md:mb-12">
 					<StatusCard
-						icon="◎"
+						icon="circle-dot"
 						label="Heap Memory"
 						value={loading ? "—" : fmtMb(status?.memory.heapUsed ?? 0)}
 						sub={loading ? "" : `of ${fmtMb(status?.memory.heapTotal ?? 0)}`}
 					/>
 					<StatusCard
-						icon="◉"
+						icon="circle-ring"
 						label="RSS Memory"
 						value={loading ? "—" : fmtMb(status?.memory.rss ?? 0)}
 					/>
 					<StatusCard
-						icon="✦"
+						icon="star4"
 						label="Uptime"
 						value={loading ? "—" : fmtUptime(status?.uptime ?? 0)}
 						glow
@@ -136,9 +135,10 @@ export default function Dashboard({
 						>
 							<div className="absolute inset-0 bg-gold-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 							<div className="relative">
-								<span className="text-3xl text-ark-gold/70 group-hover:text-ark-gold block mb-4 transition-colors duration-200">
-									{action.icon}
-								</span>
+								<Icon
+									name={action.icon}
+									className="w-8 h-8 text-ark-gold/70 group-hover:text-ark-gold mb-4 transition-colors duration-200"
+								/>
 								<div className="font-serif text-xl text-ark-ivory mb-0.5">
 									{action.label}
 								</div>
