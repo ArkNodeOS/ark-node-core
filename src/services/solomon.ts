@@ -4,7 +4,7 @@
  * Named after the biblical king renowned for wisdom.
  */
 import type { FastifyInstance } from "fastify";
-import { queryAI } from "./ai.ts";
+import { queryAI, queryAIStructured } from "./ai.ts";
 
 export interface SolomonCommand {
 	module: string | null;
@@ -133,21 +133,28 @@ system:
 - health: Health check
 `;
 
-const SYSTEM_PROMPT = `You are Solomon, the AI assistant for Ark Node — a personal sovereign server.
-You interpret user commands and map them to module actions.
+const SYSTEM_PROMPT = `You are Solomon, the command router for Ark Node — a personal sovereign server.
+Your ONLY job is to classify user commands into JSON. You do NOT answer questions or give advice.
+You MUST always return a valid JSON object, nothing else.
 
 ${MODULE_CAPABILITIES}
 
-When given a user command, respond with ONLY a JSON object in this exact format:
-{
-  "module": "<module name or null if general conversation>",
-  "action": "<action name or null>",
-  "params": {},
-  "reply": "<friendly response to user>",
-  "confidence": "high|medium|low"
-}
+RESPONSE FORMAT — always return exactly this JSON shape:
+{"module":"<name or null>","action":"<name or null>","params":{},"reply":"<one sentence>","confidence":"high|medium|low"}
 
-Be decisive. Map commands accurately. Keep replies concise and direct.`;
+EXAMPLES:
+User: "check minecraft status" -> {"module":"minecraft","action":"status","params":{},"reply":"Checking Minecraft server status.","confidence":"high"}
+User: "start the VPN" -> {"module":"vpn","action":"start","params":{},"reply":"Starting VPN.","confidence":"high"}
+User: "show me connected devices" -> {"module":"router","action":"devices","params":{},"reply":"Fetching connected devices.","confidence":"high"}
+User: "is adblock running" -> {"module":"adblock","action":"status","params":{},"reply":"Checking ad blocker status.","confidence":"high"}
+User: "what photos do I have" -> {"module":"photos","action":"library","params":{},"reply":"Loading your photo library.","confidence":"high"}
+User: "hello" -> {"module":null,"action":null,"params":{},"reply":"Hello! Ask me to control your Ark Node.","confidence":"low"}
+
+Rules:
+- NEVER explain, advise, or answer generally — only classify and route
+- If the command matches a module action, use confidence "high"
+- If unsure, use "medium" or "low" with null module/action
+- params only needed for actions that take inputs (e.g. start minecraft with version "1.20.4")`;
 
 export async function interpretCommand(
 	userMessage: string,
@@ -160,10 +167,9 @@ export async function interpretCommand(
 	let aiReply = "";
 
 	try {
-		const raw = await queryAI(
-			`User command: "${userMessage}"`,
-			undefined,
+		const raw = await queryAIStructured(
 			`${SYSTEM_PROMPT}\n\n${context}`,
+			`User command: "${userMessage}"`,
 		);
 
 		// Extract JSON from response (AI may wrap it in markdown)
