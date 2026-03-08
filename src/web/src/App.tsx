@@ -3,6 +3,7 @@ import Layout from "./components/Layout.tsx";
 import AIChat from "./pages/AIChat.tsx";
 import Apps from "./pages/Apps.tsx";
 import BackupManager from "./pages/BackupManager.tsx";
+import Chronicle from "./pages/Chronicle.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import EmailInbox from "./pages/EmailInbox.tsx";
 import Files from "./pages/Files.tsx";
@@ -16,6 +17,7 @@ export type Page =
 	| "ai"
 	| "apps"
 	| "files"
+	| "chronicle"
 	| "minecraft"
 	| "vpn"
 	| "backup"
@@ -36,6 +38,8 @@ export default function App() {
 				return <Apps />;
 			case "files":
 				return <Files />;
+			case "chronicle":
+				return <Chronicle />;
 			case "minecraft":
 				return <Minecraft />;
 			case "vpn":

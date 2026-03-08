@@ -19,8 +19,13 @@ interface NavItem {
 const MOBILE_NAV: NavItem[] = [
 	{ id: "dashboard", label: "Home", icon: "anchor", latinLabel: "Sanctum" },
 	{ id: "ai", label: "Solomon", icon: "eye", latinLabel: "Sapientia" },
+	{
+		id: "chronicle",
+		label: "Chronicle",
+		icon: "circle-ring",
+		latinLabel: "Memoria",
+	},
 	{ id: "apps", label: "Apps", icon: "star4", latinLabel: "Relics" },
-	{ id: "files", label: "Files", icon: "diamond", latinLabel: "Vault" },
 	{ id: "settings", label: "Settings", icon: "gear", latinLabel: "Regula" },
 ];
 
@@ -28,6 +33,12 @@ const MOBILE_NAV: NavItem[] = [
 const ALL_NAV: NavItem[] = [
 	{ id: "dashboard", label: "Sanctum", icon: "anchor", latinLabel: "Domus" },
 	{ id: "ai", label: "Solomon", icon: "eye", latinLabel: "Sapientia" },
+	{
+		id: "chronicle",
+		label: "Chronicle",
+		icon: "circle-ring",
+		latinLabel: "Memoria",
+	},
 	{ id: "apps", label: "Relics", icon: "star4", latinLabel: "Moduli" },
 	{ id: "files", label: "Vault", icon: "diamond", latinLabel: "Archivum" },
 	{ id: "minecraft", label: "Minecraft", icon: "pickaxe", latinLabel: "Ludus" },
