@@ -23,6 +23,10 @@ COPY --chown=bun:bun . .
 # Build the web UI into src/web/dist/
 RUN cd src/web && bun run build
 
+# Fix: WORKDIR creates /workspace as root. Give bun user ownership so it can
+# create /workspace/storage at runtime. Pre-create storage dir too.
+RUN chown bun:bun /workspace && mkdir -p /workspace/storage && chown bun:bun /workspace/storage
+
 USER bun
 
 EXPOSE 3000
