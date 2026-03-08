@@ -2,8 +2,13 @@
 	"name": "ark-node-core",
 	"build": {
 		"dockerfile": "Dockerfile",
-		"context": ".."
+		"context": "..",
+		"args": {
+			"USER_UID": "1000",
+			"USER_GID": "1000"
+		}
 	},
+	"remoteUser": "dev",
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -14,5 +19,5 @@
 		}
 	},
 	"forwardPorts": [3000],
-	"postCreateCommand": "bun install && cd src/web && bun install"
+	"postCreateCommand": "bun install"
 }
