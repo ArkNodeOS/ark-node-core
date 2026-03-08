@@ -12,6 +12,11 @@ const navItems: { id: Page; label: string; icon: string; latin: string }[] = [
 	{ id: "ai", label: "Solomon", icon: "✝", latin: "Sapientia" },
 	{ id: "apps", label: "Relics", icon: "❧", latin: "Moduli" },
 	{ id: "files", label: "Vault", icon: "◈", latin: "Archivum" },
+	{ id: "minecraft", label: "Minecraft", icon: "⛏", latin: "Ludus" },
+	{ id: "vpn", label: "VPN", icon: "🔒", latin: "Tutela" },
+	{ id: "backup", label: "Backup", icon: "💾", latin: "Custodia" },
+	{ id: "router", label: "Router", icon: "🌐", latin: "Retis" },
+	{ id: "email", label: "Epistulae", icon: "✉", latin: "Nuntius" },
 ];
 
 export default function Layout({ page, onNavigate, children }: LayoutProps) {
@@ -44,7 +49,7 @@ export default function Layout({ page, onNavigate, children }: LayoutProps) {
 				</div>
 
 				{/* Nav */}
-				<nav className="relative flex-1 p-4 space-y-1">
+				<nav className="relative flex-1 p-4 space-y-1 overflow-y-auto">
 					{navItems.map((item) => (
 						<button
 							key={item.id}
@@ -100,17 +105,17 @@ export default function Layout({ page, onNavigate, children }: LayoutProps) {
 					borderTop: "1px solid #3A2A10",
 				}}
 			>
-				<div className="flex justify-around items-center h-16 px-2">
+				<div className="flex overflow-x-auto justify-start items-center h-16 px-2 gap-1">
 					{navItems.map((item) => (
 						<button
 							key={item.id}
 							onClick={() => onNavigate(item.id)}
-							className={`flex flex-col items-center gap-0.5 px-4 py-2 rounded-ark transition-all min-w-[60px] ${
+							className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-ark transition-all min-w-[56px] shrink-0 ${
 								page === item.id ? "text-ark-gold" : "text-ark-dim"
 							}`}
 						>
 							<span className="text-xl leading-none">{item.icon}</span>
-							<span className="text-[10px] font-serif tracking-wide">
+							<span className="text-[9px] font-serif tracking-wide">
 								{item.label}
 							</span>
 						</button>

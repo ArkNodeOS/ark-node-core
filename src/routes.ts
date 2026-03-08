@@ -5,6 +5,9 @@ import { isOllamaAvailable, listModels, queryAI } from "./services/ai.ts";
 import { interpretCommand } from "./services/solomon.ts";
 import { getFile, listFiles, saveFile } from "./services/storage.ts";
 
+// ---- Marketplace ----
+const REGISTRY_URL = "https://raw.githubusercontent.com/ArkNodeOS/ark-registry/main/registry.json";
+
 // ---- Zod schemas ----
 const AIQuerySchema = z.object({
 	prompt: z.string().min(1, "prompt cannot be empty"),
