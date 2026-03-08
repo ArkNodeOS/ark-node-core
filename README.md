@@ -21,8 +21,8 @@ Server starts at **http://localhost:3000** · Web UI at **http://localhost:3000/
 
 ```bash
 cd src/web
-npm install
-npm run build
+bun install
+bun run build
 cd ../..
 # UI is now served at /ui/
 ```
